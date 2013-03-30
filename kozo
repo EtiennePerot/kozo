@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+scriptDir="$(dirname "$BASH_SOURCE")"
+
+export PYTHONPATH="$scriptDir/src:$PYTHONPATH"
+exec python2 -m kozo "$@"
