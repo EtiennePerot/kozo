@@ -1,7 +1,7 @@
-from .ssh import SSHTransport as _SSHTransport
+from .tcp import TCPTransport as _TCPTransport
 
 _transports = {
-	'ssh': _SSHTransport
+	'tcp': _TCPTransport
 }
 
 def kozoTransport(type):

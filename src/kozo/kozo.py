@@ -89,7 +89,7 @@ class Transport(Configurable):
 	def connect(self, otherTransport):
 		raise NotImplementedError()
 	def __str__(self):
-		return 'Transport<' + self._node.getName() + ':' + self._name + '>'
+		return self.__class__.__name__ + '<' + self._node.getName() + ':' + self._name + '>'
 
 class Channel(object):
 	def __init__(self, fromNode, toNode):
