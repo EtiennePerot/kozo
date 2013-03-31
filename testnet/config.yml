@@ -23,5 +23,16 @@ system:
                         ssh:
                                 address: localhost
                                 port: 6021
-heartbeat: 10
-connectionRetry: 60
+        node3:
+                privateKey: testnet/keys/node3
+                publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClmIXxWuw60xwwAfRcquSlb1hFxnDwLeBx3ng+4rWRuKoWW6RwF4IYHf3kR44ii8Ov/PBDQZ5rAfAcW/pVix3eXjePCadUzep7NItNAOadofnA24/C9E5rhjQ99uKSzb+jp7L+5zja0VvkrAjkpOwsXHFY5vB7dl7Q5C6qphjdZ5R41RwyHeH0qXyq7szYOCAlt8jsDrlL9F/2/0JvCbN0YLAgwiOf5u2A+m6IVSJ266UF0bWL7V3GCZ52IwUMchUtdU06qCxQeAGJT6wY4SI4SxRjGhK3m8JKQ9xLOzkLNcBs/q+AXtIX7NXKbeijBcGgoFsNYQQK49hytVeNPQTp
+                roles:
+                        logger:
+                                file: testnet/testnet.log
+                                clearLog: true
+                transports:
+                        ssh:
+                                address: localhost
+                                port: 6022
+heartbeat: 1
+connectionRetry: 3

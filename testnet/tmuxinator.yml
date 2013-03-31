@@ -6,3 +6,4 @@ tabs:
         - most testnet/config.yml
         - ./kozo testnet/config.yml node1
         - ./kozo testnet/config.yml node2
+        - ./kozo testnet/config.yml node3
