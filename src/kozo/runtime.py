@@ -189,6 +189,13 @@ class ConnectionThread(KozoThread):
 			if sentBytes == 0:
 				return 0
 			bytes = bytes[sentBytes:]
+	def kill(self):
+		try:
+			self._channel.kill()
+		except:
+			pass
+		self._channel = None
+		infoRuntime(self, 'Killed')
 	def execute(self):
 		while True:
 			if self._channel is None or not self._channel.isAlive():
@@ -206,12 +213,14 @@ class ConnectionThread(KozoThread):
 								infoRuntime(self, 'Successful connection', self._channel)
 							except Exception as e:
 								infoRuntime(self, 'Connection failed', e)
-								self._channel = None
+								self.kill()
 			if self._channel is not None:
 				try:
 					toDeliver = self._outgoingMessagesQueue.get(True, kozoSystem().getConnectionRetry())
 					messageBytes = toDeliver.toBytes()
-					self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes)
+					if self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes) == 0:
+						infoRuntime(self, 'Could not send message; assuming connection is dead.')
+						self.kill()
 				except queue.Empty:
 					warnRuntime(self, 'Did not send any mesage during the last period, is heartbeat thread dead?', e)
 			else:
