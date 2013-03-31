@@ -39,6 +39,8 @@ class _Message(object):
 class Heartbeat(_Message):
 	def __init__(self):
 		_Message.__init__(self, 'heartbeat', None)
+	def getRecipientNodes(self):
+		return kozoSystem().getNodesBy(lambda n: not n.isSelf())
 
 class RoleMessage(_Message):
 	def __init__(self, fromRole, type, data={}):
