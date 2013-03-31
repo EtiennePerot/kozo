@@ -14,8 +14,8 @@ class Configurable(object):
 		return self._name
 
 class Role(Configurable):
-	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
-		Configurable.__init__(self, 'Role<' + name + '>', providedConfig, defaultConfig, requiredKeys)
+	def __init__(self, name, providedConfig):
+		Configurable.__init__(self, 'Role<' + name + '>', providedConfig, self.__class__._roleConfig, self.__class__._roleConfigRequired)
 		self._name = name
 		self._node = None
 		self._alive = True
@@ -52,6 +52,8 @@ class Role(Configurable):
 	def error(self, *msg, **kwargs):
 		from .log import errorRole
 		return errorRole(self, *msg, **kwargs)
+	def init(self):
+		pass
 	def run(self):
 		raise NotImplementedError()
 	def kill(self):

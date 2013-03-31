@@ -145,12 +145,18 @@ class RoleThread(KozoThread):
 		self._incomingMessagesQueue = queue.Queue(self._role.getMessageQueueSize())
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
 		self._role.setControllingThread(self)
+		self._role.init()
 	def deliver(self, message):
 		self._incomingMessagesQueue.put(message)
 	def sendMessage(self, message):
 		kozoRuntime().sendMessage(message)
 	def getMessage(self, blocking=True):
-		return self._incomingMessagesQueue.get(blocking)
+		if blocking:
+			try:
+				return self._incomingMessagesQueue.get(True, kozoSystem().getConnectionRetry())
+			except queue.Empty:
+				return None
+		return self._incomingMessagesQueue.get(False)
 	def execute(self):
 		while self._role.isAlive():
 			self._role.run()
