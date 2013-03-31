@@ -194,6 +194,6 @@ class ConnectionThread(KozoThread):
 					messageBytes = toDeliver.toBytes()
 					self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes)
 				except queue.Empty:
-					pass
+					warnRuntime(self, 'Did not send any mesage during the last period, is heartbeat thread dead?', e)
 			else:
 				time.sleep(kozoSystem().getConnectionRetry())

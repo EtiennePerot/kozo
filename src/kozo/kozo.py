@@ -2,13 +2,16 @@ class KozoError(RuntimeError):
 	pass
 
 class Configurable(object):
-	def __init__(self, context, providedConfig, defaultConfig={}, requiredKeys=[]):
+	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
 		from .confmap import Config
-		self._config = Config(context, providedConfig, defaultConfig, requiredKeys)
+		self._name = name
+		self._config = Config(name, providedConfig, defaultConfig, requiredKeys)
 	def __getitem__(self, key):
 		return self._config[key]
 	def __setitem__(self, key, value):
 		self._config[key] = value
+	def __str__(self):
+		return self._name
 
 class Role(Configurable):
 	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
@@ -53,8 +56,6 @@ class Role(Configurable):
 		raise NotImplementedError()
 	def kill(self):
 		self._alive = False
-	def __str__(self):
-		return 'Role<' + self._name + '>'
 
 class Transport(Configurable):
 	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
@@ -106,11 +107,16 @@ class Channel(object):
 	def __str__(self):
 		return 'Channel<' + self._fromNode.getName() + ' to ' + self._toNode.getName() + '>'
 
-class Node(object):
-	def __init__(self, name):
+class Node(Configurable):
+	def __init__(self, name, providedConfig):
+		Configurable.__init__(self, 'Node<' + name + '>', providedConfig, {}, ['publicKey', 'privateKey', 'roles', 'transports'])
 		self._name = name
 		self._roles = []
 		self._transports = []
+		self._publicKey = self['publicKey'].split(' ', 3)
+		if len(self._publicKey) < 2:
+			raise KozoError('Invalid public key on node', self.getName())
+		self._privateKeyPath = self['privateKey']
 		kozoSystem().addNode(self)
 	def getName(self):
 		return self._name
@@ -126,6 +132,10 @@ class Node(object):
 			if role.getName() == name:
 				return role
 		return None
+	def getPublicKey(self):
+		return self._publicKey
+	def getPrivateKeyPath(self):
+		return self._privateKeyPath
 	def _kill(self):
 		for role in self._roles:
 			role.kill()
@@ -134,8 +144,6 @@ class Node(object):
 		self._transports.append(transport)
 	def getTransports(self):
 		return self._transports
-	def __str__(self):
-		return 'Node<' + self._name + '>'
 
 _kozoRuntime = None
 def kozoRuntime():
@@ -158,14 +166,8 @@ class KozoSystem(object):
 		return self._nodes
 	def getNodeByName(self, name):
 		return self._nodesByName.get(name, None)
-	def getNodesByTransport(self, transportLambda):
-		nodes = []
-		for node in self._nodes:
-			for transport in node.getTransports():
-				if transportLambda(transport):
-					nodes.append(node)
-					break
-		return nodes
+	def getNodesBy(self, func):
+		return filter(func, self.getNodes())
 	def getSelfNode(self):
 		return self._selfNode
 	def getHeartbeat(self):
@@ -213,7 +215,7 @@ def kozo(config, selfNode): # System entry point
 	from .transports import kozoTransport
 	_kozoConfig = Config('main', config, _kozoConfigDefault)
 	for nodeName, nodeConf in config['system'].items():
-		node = Node(nodeName)
+		node = Node(nodeName, nodeConf)
 		for roleName, roleConf in nodeConf['roles'].items():
 			if 'type' in roleConf:
 				roleClass = kozoRole(roleConf['type'])

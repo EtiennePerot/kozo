@@ -6,6 +6,13 @@ import paramiko
 from kozo import *
 from kozo.log import *
 
+def _publicKeyCompare(key1, key2):
+	if isinstance(key1, paramiko.PKey):
+		key1 = (key1.get_name(), key1.get_base64())
+	if isinstance(key2, paramiko.PKey):
+		key2 = (key2.get_name(), key2.get_base64())
+	return key1[0] == key2[0] and key1[1] == key2[1]
+
 class _KozoSSHServerInterface(paramiko.ServerInterface):
 	def __init__(self, *args, **kwargs):
 		paramiko.ServerInterface.__init__(self, *args, **kwargs)
@@ -15,10 +22,9 @@ class _KozoSSHServerInterface(paramiko.ServerInterface):
 	def check_auth_publickey(self, username, key):
 		if username == '':
 			for node in kozoSystem().getNodes():
-				for transport in node.getTransports():
-					if transport.__class__ == SSHTransport and transport._hasPublicKey(key):
-						self._key = key
-						return paramiko.AUTH_SUCCESSFUL
+				if _publicKeyCompare(node.getPublicKey(), key):
+					self._key = key
+					return paramiko.AUTH_SUCCESSFUL
 		return paramiko.AUTH_FAILED
 	def check_channel_request(self, kind, channelId):
 		if kind == 'kozo':
@@ -26,8 +32,6 @@ class _KozoSSHServerInterface(paramiko.ServerInterface):
 		return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 	def getKey(self):
 		return self._key
-	def check_channel_subsystem_request(self, channel, name):
-		print('CALLED', channel, name)
 
 _defaultConfig = {
 	'address': [],
@@ -47,14 +51,9 @@ class SSHTransport(Transport):
 			raise KozoError('Must provide at least one address.')
 		self._serverSocket = None
 		self._privateKey = None
-		self._publicKey = self['publicKey'].split(' ', 3)
-		if len(self._publicKey) < 2:
-			raise KozoError('Invalid public key.')
-	def _hasPublicKey(self, key):
-		return self._publicKey[0] == key.get_name() and self._publicKey[1] == key.get_base64()
 	def bind(self):
 		if self._privateKey is None:
-			self._privateKey = paramiko.RSAKey.from_private_key_file(self['privateKey'])
+			self._privateKey = paramiko.RSAKey.from_private_key_file(self.getNode().getPrivateKeyPath())
 		self._serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self._serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self._serverSocket.bind(('', self['port']))
@@ -68,8 +67,8 @@ class SSHTransport(Transport):
 				transport.set_keepalive(True)
 				transport.start_client()
 				hostKey = transport.get_remote_server_key()
-				if not otherTransport._hasPublicKey(hostKey):
-					warnTransport(self, 'Got an invalid host key when connecting to', e)
+				if not _publicKeyCompare(hostKey, otherTransport.getNode().getPublicKey()):
+					warnTransport(self, 'Got an invalid host key when connecting to', otherTransport)
 					continue
 				transport.auth_publickey('', self._privateKey)
 				channel = transport.open_channel('kozo')
@@ -94,7 +93,7 @@ class SSHTransport(Transport):
 			if sshChannel is None:
 				raise KozoError('Channel not created')
 			infoTransport(self, 'Channel created successfully', sshChannel)
-			matchingNodes = kozoSystem().getNodesByTransport(lambda t: t.__class__ == self.__class__ and t._hasPublicKey(serverInterface.getKey()))
+			matchingNodes = kozoSystem().getNodesBy(lambda t: _publicKeyCompare(t.getPublicKey(), serverInterface.getKey()))
 			assert len(matchingNodes) > 0
 			if len(matchingNodes) > 1:
 				raise KozoError('Cannot have more than one node with a given public key.')
