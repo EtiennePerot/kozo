@@ -18,4 +18,6 @@ class Timer(Role):
 	def run(self):
 		time.sleep(self['tick'])
 		if self['message']:
-			self.sendEvent('tick', self['message'])
+			message = (self['message'], time.strftime('%H:%M:%S'))
+			self.sendEvent('tick', message)
+			self.info('Sent message:', message)

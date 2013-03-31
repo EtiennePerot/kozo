@@ -18,7 +18,7 @@ class Cuckoo(Role):
 	def __init__(self, name, config):
 		Role.__init__(self, name, config, _defaultConfig)
 	def isInterestedIn(self, message):
-		return isinstance(message, Event) and message.getSenderRoleClass() == Timer and (self['timer'] == '*' or message.getSenderRole().getName() == self['timer'])
+		return isinstance(message, Event) and message.getEventType() == 'tick' and (self['timer'] == '*' or message.getSenderRole().getName() == self['timer'])
 	def run(self):
 		message = self.getMessage()
 		self.info('Received message', message.getEventData(), 'from timer', message.getSenderRole())
