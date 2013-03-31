@@ -34,3 +34,5 @@ system:
                                 port: 6022
 heartbeat: 1
 connectionRetry: 3
+cipher: aes256-ctr
+hmac: hmac-sha1

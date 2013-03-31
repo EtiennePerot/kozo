@@ -177,12 +177,6 @@ class KozoSystem(object):
 		return filter(func, self.getNodes())
 	def getSelfNode(self):
 		return self._selfNode
-	def getHeartbeat(self):
-		return _kozoConfig['heartbeat']
-	def getConnectionRetry(self):
-		return _kozoConfig['connectionRetry']
-	def getOutgoingQueueSize(self):
-		return _kozoConfig['outgoingQueueSize']
 	def kill(self):
 		for node in self.getNodes():
 			node._kill()
@@ -211,8 +205,13 @@ _kozoConfig = None
 _kozoConfigDefault = {
 	'heartbeat': 10,
 	'connectionRetry': 60,
-	'outgoingQueueSize': 128
+	'outgoingQueueSize': 128,
+	'cipher': 'aes256-ctr',
+	'hmac': 'hmac-sha1'
 }
+def kozoConfig(key):
+	return _kozoConfig[key]
+
 def kozo(config, selfNode): # System entry point
 	global _kozoConfig
 	if _kozoConfig is not None:

@@ -6,7 +6,7 @@ try:
 	import queue
 except ImportError:
 	import Queue as queue
-from .kozo import kozoSystem, kozoRuntime, KozoStopError
+from .kozo import kozoSystem, kozoRuntime, kozoConfig, KozoStopError
 from .messages import *
 from .log import *
 
@@ -86,7 +86,7 @@ class HeartbeatThread(KozoThread):
 		self.daemon = True
 	def execute(self):
 		while True:
-			time.sleep(kozoSystem().getHeartbeat())
+			time.sleep(kozoConfig('heartbeat'))
 			kozoRuntime().sendMessage(Heartbeat())
 
 class TransportThread(KozoThread):
@@ -125,10 +125,10 @@ class ReceptionThread(KozoThread):
 	def execute(self):
 		while self._channel.isAlive():
 			try:
-				lengthBytes = self._receiveBytes(struct.calcsize('I'), kozoSystem().getConnectionRetry())
+				lengthBytes = self._receiveBytes(struct.calcsize('I'), kozoConfig('connectionRetry'))
 				if lengthBytes:
 					length = struct.unpack('I', lengthBytes)[0]
-					messageBytes = self._receiveBytes(length, kozoSystem().getConnectionRetry())
+					messageBytes = self._receiveBytes(length, kozoConfig('connectionRetry'))
 					if messageBytes:
 						message = decodeMessage(messageBytes)
 						kozoRuntime().handOffIncomingMessage(message)
@@ -163,7 +163,7 @@ class RoleThread(KozoThread):
 	def getMessage(self, blocking=True):
 		if blocking:
 			try:
-				return self._incomingMessagesQueue.get(True, kozoSystem().getConnectionRetry())
+				return self._incomingMessagesQueue.get(True, kozoConfig('connectionRetry'))
 			except queue.Empty:
 				return None
 		return self._incomingMessagesQueue.get(False)
@@ -178,7 +178,7 @@ class ConnectionThread(KozoThread):
 	def __init__(self, node):
 		self._node = node
 		self._channel = None
-		self._outgoingMessagesQueue = queue.Queue(kozoSystem().getOutgoingQueueSize())
+		self._outgoingMessagesQueue = queue.Queue(kozoConfig('outgoingQueueSize'))
 		KozoThread.__init__(self, name='Connection to ' + str(self._node))
 		self.daemon = True
 	def sendMessage(self, message):
@@ -216,7 +216,7 @@ class ConnectionThread(KozoThread):
 								self.kill()
 			if self._channel is not None:
 				try:
-					toDeliver = self._outgoingMessagesQueue.get(True, kozoSystem().getConnectionRetry())
+					toDeliver = self._outgoingMessagesQueue.get(True, kozoConfig('connectionRetry'))
 					messageBytes = toDeliver.toBytes()
 					if self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes) == 0:
 						infoRuntime(self, 'Could not send message; assuming connection is dead.')
@@ -224,4 +224,4 @@ class ConnectionThread(KozoThread):
 				except queue.Empty:
 					warnRuntime(self, 'Did not send any mesage during the last period, is heartbeat thread dead?', e)
 			else:
-				time.sleep(kozoSystem().getConnectionRetry())
+				time.sleep(kozoConfig('connectionRetry'))

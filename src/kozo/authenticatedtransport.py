@@ -34,6 +34,10 @@ class AuthenticatedTransport(Transport):
 	def __init__(self, name, config, *args, **kwargs):
 		Transport.__init__(self, name, config, *args, **kwargs)
 		self._privateKey = None
+	def _initializeParamikoTransport(self, transport):
+		transport.set_keepalive(True)
+		transport.get_security_options().ciphers = (kozoConfig('cipher'),)
+		transport.get_security_options().digests = (kozoConfig('hmac'),)
 	def bind(self):
 		Transport.bind(self)
 		if self._privateKey is None:
@@ -49,7 +53,7 @@ class AuthenticatedTransport(Transport):
 					infoTransport(self, 'Failed to connect to', address, '(No socket returned)')
 					continue
 				transport = paramiko.Transport(unauthenticatedSocket)
-				transport.set_keepalive(True)
+				self._initializeParamikoTransport(transport)
 				transport.start_client()
 				hostKey = transport.get_remote_server_key()
 				if not _publicKeyCompare(hostKey, otherTransport.getNode().getPublicKey()):
@@ -66,12 +70,12 @@ class AuthenticatedTransport(Transport):
 		if connection is not None:
 			try:
 				transport = paramiko.Transport(connection)
+				self._initializeParamikoTransport(transport)
 				try:
 					transport.load_server_moduli()
 				except:
 					pass
 				transport.add_server_key(self._privateKey)
-				transport.set_keepalive(True)
 				serverInterface = _KozoSSHServerInterface()
 				infoTransport(self, 'Starting SSH server on socket', connection)
 				transport.start_server(server=serverInterface)
