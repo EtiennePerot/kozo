@@ -87,9 +87,9 @@ class Order(RoleMessage):
 		return self.getRoleData()['orderData']
 
 class Log(RoleMessage):
-	def __init__(fromRole, message=''):
+	def __init__(self, fromRole, *message):
 		RoleMessage.__init__(self, fromRole, 'log', {
-			'message': message
+			'message': ' '.join(map(str, message))
 		})
 	def getMessage(self):
 		return self.getRoleData()['message']

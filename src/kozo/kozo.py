@@ -43,6 +43,10 @@ class Role(Configurable):
 		from .messages import Event
 		if self._controllingThread is not None:
 			self._controllingThread.sendMessage(Event(self, eventType, eventData))
+	def sendLog(self, *logMessage):
+		from .messages import Log
+		if self._controllingThread is not None:
+			self._controllingThread.sendMessage(Log(self, *logMessage))
 	def info(self, *msg, **kwargs):
 		from .log import infoRole
 		return infoRole(self, *msg, **kwargs)
@@ -219,7 +223,9 @@ def kozo(config, selfNode): # System entry point
 	for nodeName, nodeConf in config['system'].items():
 		node = Node(nodeName, nodeConf)
 		for roleName, roleConf in nodeConf['roles'].items():
-			if 'type' in roleConf:
+			if roleConf is None:
+				roleConf = {}
+			if  'type' in roleConf:
 				roleClass = kozoRole(roleConf['type'])
 			else:
 				roleClass = kozoRole(roleName)

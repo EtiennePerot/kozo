@@ -5,10 +5,7 @@ system:
                 roles:
                         timer1:
                                 type: timer
-                                tick: 17
-                        timer2:
-                                type: timer
-                                tick: 3
+                                tick: 30
                 transports:
                         ssh:
                                 address: localhost
@@ -18,7 +15,8 @@ system:
                 publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
                 roles:
                         cuckoo:
-                                timer: timer2
+                                timer: timer1
+                        bluetooth-discover:
                 transports:
                         ssh:
                                 address: localhost
