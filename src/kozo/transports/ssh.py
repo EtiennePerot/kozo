@@ -116,8 +116,8 @@ class SSHChannel(Channel):
 		Channel.kill(self)
 		self._sshChannel.shutdown_read()
 		self._sshChannel.shutdown_write()
-	def send(self, message):
-		return self._sshChannel.send(message)
+	def send(self, bytes):
+		return self._sshChannel.send(bytes)
 	def receive(self, bytes, timeout):
 		self._sshChannel.settimeout(timeout)
 		try:

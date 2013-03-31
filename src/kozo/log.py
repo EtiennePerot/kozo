@@ -1,16 +1,15 @@
 import logging as _logging
 import threading as _threading
 try:
-	import queue as _Queue
+	import queue as _queue
 except ImportError:
-	import Queue as _Queue
+	import Queue as _queue
 import traceback as _traceback
-from .messages import Log as _Log
 
 _logging.basicConfig()
 _localLogger = _logging.getLogger('kozo')
 _localLogger.setLevel(_logging.INFO)
-_logQueue = _Queue.Queue()
+_logQueue = _queue.Queue()
 
 class _logThread(_threading.Thread):
 	def __init__(self):
@@ -68,3 +67,12 @@ def warnRuntime(thread, *msg, **kwargs):
 
 def errorRuntime(thread, *msg, **kwargs):
 	return error('[Runtime:' + thread.name + ']', *msg, **kwargs)
+
+def infoRole(role, *msg, **kwargs):
+	return info('[Role:' + role.getName() + ']', *msg, **kwargs)
+
+def warnRole(role, *msg, **kwargs):
+	return warn('[Role:' + role.getName() + ']', *msg, **kwargs)
+
+def errorRole(role, *msg, **kwargs):
+	return error('[Role:' + role.getName() + ']', *msg, **kwargs)

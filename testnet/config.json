@@ -2,8 +2,13 @@
 	"system": {
 		"node1": {
 			"roles": {
-				"timer": {
+				"timer1": {
+					"type": "timer",
 					"tick": 1
+				},
+				"timer2": {
+					"type": "timer",
+					"tick": 3
 				}
 			},
 			"transports": {
@@ -17,9 +22,8 @@
 		},
 		"node2": {
 			"roles": {
-				"clock": {
-					"type": "timer",
-					"tick": 1
+				"cuckoo": {
+					"timer": "timer2"
 				}
 			},
 			"transports": {

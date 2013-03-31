@@ -1,15 +1,21 @@
 import time
-import kozo
-from kozo.log import *
+from kozo import Role
 
 _defaultConfig = {
 	'tick': 1,
-	'message': 'Cuckoo!'
+	'message': 'Ping!'
 }
 
-class Timer(kozo.Role):
+class Timer(Role):
+	"""
+	Sends a ping every so often.
+	Config variables:
+	  - tick: Interval between pings
+	  - message: Optional message to show in local log at every tick
+	"""
 	def __init__(self, name, config):
-		kozo.Role.__init__(self, name, config, _defaultConfig)
+		Role.__init__(self, name, config, _defaultConfig)
 	def run(self):
 		time.sleep(self['tick'])
-		info(self['message'])
+		if self['message']:
+			self.sendEvent('tick', self['message'])
