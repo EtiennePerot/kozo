@@ -6,7 +6,7 @@ try:
 	import queue
 except ImportError:
 	import Queue as queue
-from .kozo import kozoSystem, kozoRuntime
+from .kozo import kozoSystem, kozoRuntime, KozoStopError
 from .messages import *
 from .log import *
 
@@ -39,6 +39,9 @@ class KozoRuntime(object):
 		for thread in self._allActiveThreads():
 			if thread.isAlive():
 				return True
+	def kill(self):
+		for role in kozoSystem().getSelfNode().getRoles():
+			role.kill()
 	def join(self):
 		while self.isAlive():
 			for thread in self._allActiveThreads():
@@ -144,12 +147,19 @@ class RoleThread(KozoThread):
 		self._role = role
 		self._incomingMessagesQueue = queue.Queue(self._role.getMessageQueueSize())
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
+		self._dead = threading.Event()
 		self._role.setControllingThread(self)
 		self._role.init()
 	def deliver(self, message):
 		self._incomingMessagesQueue.put(message)
 	def sendMessage(self, message):
 		kozoRuntime().sendMessage(message)
+	def sleep(self, seconds):
+		isDead = self._dead.wait(seconds)
+		if isDead:
+			raise KozoStopError()
+	def kill(self):
+		self._dead.set()
 	def getMessage(self, blocking=True):
 		if blocking:
 			try:
@@ -158,8 +168,11 @@ class RoleThread(KozoThread):
 				return None
 		return self._incomingMessagesQueue.get(False)
 	def execute(self):
-		while self._role.isAlive():
-			self._role.run()
+		try:
+			while not self._dead.is_set():
+				self._role.run()
+		except KozoStopError:
+			pass
 
 class ConnectionThread(KozoThread):
 	def __init__(self, node):

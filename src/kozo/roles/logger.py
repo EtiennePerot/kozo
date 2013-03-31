@@ -20,6 +20,7 @@ class Logger(Role):
 		logLine = time.strftime(self._timePrefix) + '<' + logMessage.getSender().getName() + '> ' + logMessage.getMessage() + '\n'
 		try:
 			self._file.write(logLine)
+			self.info(logLine)
 			self._flushCounter -= 1
 		except Exception as e:
 			self.warn('Failed to log message', logMessage, e)

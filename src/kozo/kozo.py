@@ -1,6 +1,9 @@
 class KozoError(RuntimeError):
 	pass
 
+class KozoStopError(KozoError):
+	pass
+
 class Configurable(object):
 	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
 		from .confmap import Config
@@ -18,7 +21,6 @@ class Role(Configurable):
 		Configurable.__init__(self, 'Role<' + name + '>', providedConfig, self.__class__._roleConfig, self.__class__._roleConfigRequired)
 		self._name = name
 		self._node = None
-		self._alive = True
 		self._controllingThread = None
 	def getName(self):
 		return self._name
@@ -26,12 +28,13 @@ class Role(Configurable):
 		return self._node
 	def _setNode(self, node):
 		self._node = node
-	def setControllingThread(self, thread):
-		self._controllingThread = thread
-	def isAlive(self):
-		return self._alive
+	def setControllingThread(self, controllingThread):
+		self._controllingThread = controllingThread
 	def isInterestedIn(self, message):
 		return False
+	def sleep(self, seconds):
+		if self._controllingThread is not None:
+			self._controllingThread.sleep(seconds)
 	def getMessageQueueSize(self):
 		if self['messageQueueSize'] is not None:
 			return self['messageQueueSize']
@@ -61,7 +64,8 @@ class Role(Configurable):
 	def run(self):
 		raise NotImplementedError()
 	def kill(self):
-		self._alive = False
+		if self._controllingThread is not None:
+			self._controllingThread.kill()
 
 class Transport(Configurable):
 	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
@@ -142,9 +146,6 @@ class Node(Configurable):
 		return self._publicKey
 	def getPrivateKeyPath(self):
 		return self._privateKeyPath
-	def _kill(self):
-		for role in self._roles:
-			role.kill()
 	def addTransport(self, transport):
 		transport._setNode(self)
 		self._transports.append(transport)
@@ -196,7 +197,7 @@ class KozoSystem(object):
 		try:
 			kozoRuntime().join()
 		except KeyboardInterrupt:
-			self.kill()
+			kozoRuntime().kill()
 			kozoRuntime().join()
 
 _kozoSystem = None

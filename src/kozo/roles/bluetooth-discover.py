@@ -1,4 +1,3 @@
-import time
 from kozo import Role
 from kozo.messages import Event
 import bluetooth
@@ -7,7 +6,7 @@ class BluetoothDiscoverer(Role):
 	def init(self):
 		self._currentKnownDevices = {}
 	def run(self):
-		time.sleep(self['cooldown'])
+		self.sleep(self['cooldown'])
 		devices = bluetooth.discover_devices(duration=self['searchDuration'], lookup_names=True)
 		currentDevices = {}
 		for address, name in devices:

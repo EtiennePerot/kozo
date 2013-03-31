@@ -3,7 +3,7 @@ from kozo import Role
 
 class Timer(Role):
 	def run(self):
-		time.sleep(self['tick'])
+		self.sleep(self['tick'])
 		if self['message']:
 			message = (self['message'], time.strftime('%H:%M:%S'))
 			self.sendEvent('tick', message)
