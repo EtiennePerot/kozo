@@ -1,4 +1,5 @@
 import itertools
+import random
 import struct
 import threading
 import time
@@ -169,6 +170,9 @@ class RoleThread(KozoThread):
 		return self._incomingMessagesQueue.get(False)
 	def execute(self):
 		beforeTimestamp = None
+		rateControl = self._role.getRateControl()
+		if rateControl is not None:
+			self.sleep(random.uniform(0, rateControl))
 		try:
 			while not self._dead.is_set():
 				beforeTimestamp = time.time()
@@ -204,6 +208,7 @@ class ConnectionThread(KozoThread):
 		self._channel = None
 		infoRuntime(self, 'Killed')
 	def execute(self):
+		time.sleep(random.uniform(0, kozoConfig('connectionRetry')))
 		while True:
 			if self._channel is None or not self._channel.isAlive():
 				originNode = kozoSystem().getSelfNode()
