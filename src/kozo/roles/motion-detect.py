@@ -4,8 +4,9 @@ import RPi.GPIO as gpio
 class MotionDetector(Role):
 	def init(self):
 		self._hadMotion = False
+	def getRateControl(self):
+		return self['period']
 	def run(self):
-		self.sleep(self['period'])
 		hasMotion = io.input(self['pin'])
 		self.sendEvent('motion detection', hasMotion)
 		if self['log'] and self._hadMotion != hasMotion:

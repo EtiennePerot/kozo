@@ -168,9 +168,16 @@ class RoleThread(KozoThread):
 				return None
 		return self._incomingMessagesQueue.get(False)
 	def execute(self):
+		beforeTimestamp = None
 		try:
 			while not self._dead.is_set():
+				beforeTimestamp = time.time()
 				self._role.run()
+				rateControl = self._role.getRateControl()
+				if type(rateControl) is int:
+					afterTimestamp = time.time()
+					if afterTimestamp - beforeTimestamp < rateControl:
+						self.sleep(rateControl - (afterTimestamp - beforeTimestamp))
 		except KozoStopError:
 			pass
 

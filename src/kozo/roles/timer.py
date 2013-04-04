@@ -2,12 +2,12 @@ import time
 from kozo import Role
 
 class Timer(Role):
+	def getRateControl(self):
+		return self['tick']
 	def run(self):
-		self.sleep(self['tick'])
-		if self['message']:
-			message = (self['message'], time.strftime('%H:%M:%S'))
-			self.sendEvent('tick', message)
-			self.info('Sent message:', message)
+		message = (self['message'], time.strftime('%H:%M:%S'))
+		self.sendEvent('tick', message)
+		self.info('Sent message:', message)
 
 roleInfo = {
 	'format': '1.0',

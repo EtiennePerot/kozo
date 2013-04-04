@@ -32,6 +32,8 @@ class Role(Configurable):
 		self._controllingThread = controllingThread
 	def isInterestedIn(self, message):
 		return False
+	def getRateControl(self):
+		return None
 	def sleep(self, seconds):
 		if self._controllingThread is not None:
 			self._controllingThread.sleep(seconds)

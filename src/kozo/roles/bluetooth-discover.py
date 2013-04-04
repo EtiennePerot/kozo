@@ -1,5 +1,4 @@
 from kozo import Role
-from kozo.messages import Event
 import bluetooth
 
 class BluetoothDiscoverer(Role):
