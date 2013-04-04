@@ -1,13 +1,7 @@
 import os
 import sys
 from kozo import KozoError
-
-def _importFile(file):
-	previousPath = sys.path[:]
-	sys.path = [os.path.dirname(file)] + sys.path
-	importedFile = __import__(os.path.basename(file)[:os.path.basename(file).rfind('.')])
-	sys.path = previousPath
-	return importedFile
+from kozo.helpers import importFile as _importFile
 
 _roles = {}
 def kozoRole(role):

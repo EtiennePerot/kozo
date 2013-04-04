@@ -70,8 +70,8 @@ class Role(Configurable):
 			self._controllingThread.kill()
 
 class Transport(Configurable):
-	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
-		Configurable.__init__(self, 'Transport<' + name + '>', providedConfig, defaultConfig, requiredKeys)
+	def __init__(self, name, providedConfig):
+		Configurable.__init__(self, 'Transport<' + name + '>', providedConfig, self.__class__._transportConfig, self.__class__._transportConfigRequired)
 		self._name = name
 		self._node = None
 	def getNode(self):
@@ -82,6 +82,8 @@ class Transport(Configurable):
 		return self.getNode().isSelf()
 	def getPriority(self):
 		return 0
+	def init(self):
+		pass
 	def bind(self):
 		pass
 	def accept(self):

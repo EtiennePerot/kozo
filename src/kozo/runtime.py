@@ -10,6 +10,7 @@ except ImportError:
 from .kozo import kozoSystem, kozoRuntime, kozoConfig, KozoStopError
 from .messages import *
 from .log import *
+from .helpers import randomWait
 
 class KozoRuntime(object):
 	def __init__(self):
@@ -26,6 +27,8 @@ class KozoRuntime(object):
 		return self._allThreads(key=lambda x: not x.daemon)
 	def start(self):
 		for node in kozoSystem().getNodes():
+			for transport in node.getTransports():
+				transport.init()
 			if node.isSelf():
 				for transport in node.getTransports():
 					self._transportThreads.append(TransportThread(transport))
@@ -172,7 +175,7 @@ class RoleThread(KozoThread):
 		beforeTimestamp = None
 		rateControl = self._role.getRateControl()
 		if rateControl is not None:
-			self.sleep(random.uniform(0, rateControl))
+			randomWait(rateControl, sleepFunction=self.sleep)
 		try:
 			while not self._dead.is_set():
 				beforeTimestamp = time.time()
@@ -208,7 +211,7 @@ class ConnectionThread(KozoThread):
 		self._channel = None
 		infoRuntime(self, 'Killed')
 	def execute(self):
-		time.sleep(random.uniform(0, kozoConfig('connectionRetry')))
+		randomWait(kozoConfig('connectionRetry'))
 		while True:
 			if self._channel is None or not self._channel.isAlive():
 				originNode = kozoSystem().getSelfNode()

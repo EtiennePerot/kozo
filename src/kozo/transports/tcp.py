@@ -3,15 +3,8 @@ import six
 from kozo.authenticatedtransport import AuthenticatedTransport
 from kozo.log import infoTransport
 
-_defaultConfig = {
-	'port': 6020,
-	'socketConnectionBacklog': 256,
-	'channelCreationTimeout': 30
-}
-
 class TCPTransport(AuthenticatedTransport):
-	def __init__(self, name, config):
-		AuthenticatedTransport.__init__(self, name, config, _defaultConfig, ['address'])
+	def init(self):
 		if isinstance(self['address'], six.string_types):
 			self['address'] = [self['address']]
 		if len(self['address']) < 0:
@@ -31,3 +24,24 @@ class TCPTransport(AuthenticatedTransport):
 		return sock
 	def acceptUnauthenticatedConnection(self):
 		return self._serverSocket.accept()[0]
+
+transportInfo = {
+	'format': '1.0',
+	'class': TCPTransport,
+	'author': 'Etienne Perot',
+	'version': '1.0',
+	'description': 'A simple TCP socket transport.',
+	'config': {
+		'address': {
+			'description': 'An address or a list of addresses that the node can be reached from.'
+		},
+		'port': {
+			'default': 6020,
+			'description': 'TCP port to bind to.'
+		},
+		'socketConnectionBacklog': {
+			'default': 256,
+			'description': 'Maximum number of incoming-but-unprocessed connections to allow.'
+		}
+	}
+}
