@@ -1,17 +1,54 @@
-import cPickle
 import time
 import itertools
 from kozo import kozoSystem
 from .log import *
 
+try:
+	import msgpack as _msgpack
+	_pack = _msgpack.packb
+	_unpack = lambda x: _msgpack.unpackb(x, use_list=False)
+	info('Using msgpack as serializer.')
+except ImportError:
+	import cPickle
+	_pack = cPickle.dumps
+	_unpack = cPickle.loads
+	info('Using cPickle as serializer.')
+
+_definedMessageClasses = {}
+class _MessageMetaclass(type):
+	def __new__(*args, **kwargs):
+		builtClass = type.__new__(*args, **kwargs)
+		builtClass._kozoMessage_init = builtClass.__init__
+		def newInit(self, *args, **kwargs):
+			if '_kozoMessage_payload' in kwargs:
+				self._content = kwargs['_kozoMessage_payload']
+			else:
+				builtClass._kozoMessage_init(self, *args, **kwargs)
+		builtClass.__init__ = newInit
+		if builtClass.__name__ in _definedMessageClasses:
+			raise KozoError('Cannot define two message classes with the same name.')
+		_definedMessageClasses[builtClass.__name__] = builtClass
+		return builtClass
+
 def decodeMessage(bytes):
-	payload = cPickle.loads(bytes)
-	if not isinstance(payload, _Message):
-		warn('Received invalid payload.')
+	payload = _unpack(bytes)
+	if type(payload) is not type(()):
+		warn('Received non-tuple payload:', type(payload))
 		return None
-	return payload
+	if len(payload) != 2:
+		warn('Tuple payload was not the correct size:', len(payload))
+		return None
+	messageClass, messageContents = payload
+	if messageClass not in _definedMessageClasses:
+		warn('Message class does not exist:', messageClass)
+		return None
+	if type(messageContents) is not type({}):
+		warn('Message content is not a dictionary:', type(messageContents))
+		return None
+	return _definedMessageClasses[messageClass](_kozoMessage_payload=messageContents)
 
 class _Message(object):
+	__metaclass__ = _MessageMetaclass
 	def __init__(self, type, data={}):
 		self._content = {
 			'type': type,
@@ -19,14 +56,10 @@ class _Message(object):
 			'sender': kozoSystem().getSelfNode().getName(),
 			'data': data
 		}
-	def __getstate__(self):
-		return self._content
-	def __setstate__(self, state):
-		self._content = state
 	def getRecipientNodes(self):
 		return kozoSystem().getNodes()
 	def toBytes(self):
-		return cPickle.dumps(self, cPickle.HIGHEST_PROTOCOL)
+		return _pack((self.__class__.__name__, self._content))
 	def getType(self):
 		return self._content['type']
 	def getTimestamp(self):
