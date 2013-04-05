@@ -1,9 +1,41 @@
-Kōzō. Doc coming soon, maybe.
+# 構造 - Kōzō
+*(Prounounced "Kouzou"; means "Structure")*
 
-Dependencies: Python 2, Paramiko, python-yaml, python-six
+Doc coming soon, maybe.
 
-Optional dependencies: MessagePack (If present, it will be used as serializer; otherwise, cPickle is used)
+## Dependencies
+### Hard dependencies
+* [Python 2]
+* [Paramiko], which itself depends on:
+    * [PyCrypto] - which unfortunately prevents the use of [PyPy]
+* Either [PyYAML] or [LibYAML]
+* [Python-six]
 
-Testnet dependencies: tmux, tmuxinator, most
+### Optional dependencies
+* [MessagePack] - Used as serializer if available; otherwise, [cPickle] is used
 
-Some roles have other obvious dependencies, such as the bluetooth discovery role requiring python-bluez, or the GPIO-using roles requiring GPIO.
+### Testnet dependencies
+* [tmuxinator], which itself depends on:
+    * [Ruby]
+    * [tmux]
+* Regular Kōzō dependencies
+
+### Specific role dependencies
+* `roles/bluetooth-discover.py`: [PyBluez]
+* `roles/motion-detect.py`: Either [RPIO] or [RPi.GPIO]
+
+[Python 2]: http://www.python.org/
+[Paramiko]: http://www.lag.net/paramiko/
+[PyCrypto]: http://www.pycrypto.org/
+[PyPy]: http://pypy.org/
+[PyYAML]: http://pyyaml.org/wiki/PyYAML
+[LibYAML]: http://pyyaml.org/wiki/LibYAML
+[Python-six]: https://pythonhosted.org/six/
+[MessagePack]: http://msgpack.org/
+[cPickle]: http://docs.python.org/2/library/pickle.html#module-cPickle
+[tmuxinator]: https://github.com/aziz/tmuxinator
+[Ruby]: http://www.ruby-lang.org/
+[tmux]: http://tmux.sourceforge.net/
+[PyBluez]: https://code.google.com/p/pybluez/
+[RPIO]: https://pythonhosted.org/RPIO/
+[RPi.GPIO]: https://code.google.com/p/raspberry-gpio-python/
