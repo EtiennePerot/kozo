@@ -1,5 +1,6 @@
 from kozo import Role
-import RPi.GPIO as gpio
+from kozo.helpers import rpio
+rpio = rpio()
 
 class MotionDetector(Role):
 	def init(self):
@@ -7,7 +8,7 @@ class MotionDetector(Role):
 	def getRateControl(self):
 		return self['period']
 	def run(self):
-		hasMotion = io.input(self['pin'])
+		hasMotion = rpio.input(self['pin'])
 		self.sendEvent('motion detection', hasMotion)
 		if self['log'] and self._hadMotion != hasMotion:
 			if hasMotion:

@@ -12,3 +12,10 @@ def importFile(file):
 
 def randomWait(upTo, sleepFunction=time.sleep):
 	return sleepFunction(random.uniform(0, upTo))
+
+def rpio():
+	try:
+		import RPIO as GPIO
+	except ImportError:
+		import RPi.GPIO as GPIO
+	return GPIO
