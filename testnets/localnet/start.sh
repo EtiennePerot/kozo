@@ -2,9 +2,9 @@
 
 set -e
 
-rootDir="$(dirname "$(dirname "$BASH_SOURCE")")"
+rootDir="$(dirname "$(dirname "$(dirname "$BASH_SOURCE")")")"
 mkdir -p "$HOME/.tmuxinator"
-echo "project_root: $rootDir" > "$HOME/.tmuxinator/kozo-testnet.yml"
+echo "project_root: $rootDir" > "$HOME/.tmuxinator/kozo-localnet.yml"
 # Detect pager
 pager=''
 if [ -n "$PAGER" ]; then
@@ -23,5 +23,5 @@ fi
 if [ -z "$pager" ]; then
 	pager=cat
 fi
-cat testnet/tmuxinator.yml | sed "s/PAGERGOESHERE/$pager/g" >> "$HOME/.tmuxinator/kozo-testnet.yml"
-exec tmuxinator kozo-testnet
+cat testnets/localnet/tmuxinator.yml | sed "s/PAGERGOESHERE/$pager/g" >> "$HOME/.tmuxinator/kozo-localnet.yml"
+exec tmuxinator kozo-localnet

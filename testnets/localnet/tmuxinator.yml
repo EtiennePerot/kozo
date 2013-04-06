@@ -1,0 +1,9 @@
+project_name: kozo-localnet
+tabs:
+  - network:
+      layout: main-horizontal
+      panes:
+        - PAGERGOESHERE testnets/localnet/config.yml
+        - ./kozo testnets/localnet/config.yml node1
+        - ./kozo testnets/localnet/config.yml node2
+        - ./kozo testnets/localnet/config.yml node3
