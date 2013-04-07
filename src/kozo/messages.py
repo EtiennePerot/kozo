@@ -7,12 +7,12 @@ try:
 	import msgpack as _msgpack
 	_pack = _msgpack.packb
 	_unpack = lambda x: _msgpack.unpackb(x, use_list=False)
-	info('Using msgpack as serializer.')
+	info('Using msgpack as serializer. Make sure this is the case for all other nodes.')
 except ImportError:
 	import cPickle
 	_pack = cPickle.dumps
 	_unpack = cPickle.loads
-	info('Using cPickle as serializer.')
+	info('Using cPickle as serializer. Make sure this is the case for all other nodes.')
 
 _definedMessageClasses = {}
 class _MessageMetaclass(type):
