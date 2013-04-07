@@ -20,7 +20,7 @@ def kozoTransport(transport):
 		raise KozoError('Could not find transport:', transport, paths)
 	try:
 		transportData = _importFile(transportFile)
-	except Exception as e:
+	except BaseException as e:
 		raise KozoError('Error while trying to import transport', transportFile, e)
 	if 'transportInfo' not in transportData.__dict__:
 		raise KozoError('transportInfo not found in', transportFile)

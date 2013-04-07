@@ -22,13 +22,13 @@ class Logger(Role):
 			self._file.write(logLine)
 			self.info(logLine)
 			self._flushCounter -= 1
-		except Exception as e:
+		except BaseException as e:
 			self.warn('Failed to log message', logMessage, e)
 		if self._flushCounter < 1:
 			self._flushCounter = self['flushEvery']
 			try:
 				self._file.flush()
-			except Exception as e:
+			except BaseException as e:
 				self.warn('Failed to flush log file', e)
 
 roleInfo = {

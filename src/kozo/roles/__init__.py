@@ -20,7 +20,7 @@ def kozoRole(role):
 		raise KozoError('Could not find role:', role, paths)
 	try:
 		roleData = _importFile(roleFile)
-	except Exception as e:
+	except BaseException as e:
 		raise KozoError('Error while trying to import role', roleFile, e)
 	if 'roleInfo' not in roleData.__dict__:
 		raise KozoError('roleInfo not found in', roleFile)

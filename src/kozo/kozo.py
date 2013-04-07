@@ -70,6 +70,11 @@ class Role(Configurable):
 			self._controllingThread.kill()
 
 class Transport(Configurable):
+	Priority_BEST = 3
+	Priority_GOOD = 2
+	Priority_MEH = 2
+	Priority_BAD = 1
+	Priority_WORST = 0
 	def __init__(self, name, providedConfig):
 		Configurable.__init__(self, 'Transport<' + name + '>', providedConfig, self.__class__._transportConfig, self.__class__._transportConfigRequired)
 		self._name = name
@@ -81,7 +86,7 @@ class Transport(Configurable):
 	def isSelf(self):
 		return self.getNode().isSelf()
 	def getPriority(self):
-		return 0
+		return Transport.Priority_MEH
 	def init(self):
 		pass
 	def bind(self):
@@ -193,10 +198,10 @@ class KozoSystem(object):
 			raise KozoError('Did not set self node.')
 		kozoRuntime().start()
 		try:
-			kozoRuntime().join()
+			kozoRuntime().join(verbose=False)
 		except KeyboardInterrupt:
 			kozoRuntime().kill()
-			kozoRuntime().join()
+			kozoRuntime().join(verbose=True)
 
 _kozoSystem = None
 def kozoSystem():
@@ -229,7 +234,7 @@ def kozo(config, selfNode): # System entry point
 		for roleName, roleConf in nodeConf['roles'].items():
 			if roleConf is None:
 				roleConf = {}
-			if  'type' in roleConf:
+			if 'type' in roleConf:
 				roleClass = kozoRole(roleConf['type'])
 			else:
 				roleClass = kozoRole(roleName)

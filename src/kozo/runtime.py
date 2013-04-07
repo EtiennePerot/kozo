@@ -3,14 +3,10 @@ import random
 import struct
 import threading
 import time
-try:
-	import queue
-except ImportError:
-	import Queue as queue
 from .kozo import kozoSystem, kozoRuntime, kozoConfig, KozoStopError
 from .messages import *
 from .log import *
-from .helpers import randomWait
+from .helpers import randomWait, RollingQueue
 
 class KozoRuntime(object):
 	def __init__(self):
@@ -46,10 +42,19 @@ class KozoRuntime(object):
 	def kill(self):
 		for role in kozoSystem().getSelfNode().getRoles():
 			role.kill()
-	def join(self):
+	def join(self, verbose=False):
 		while self.isAlive():
 			for thread in self._allActiveThreads():
-				thread.join(3600)
+				if verbose:
+					info('Waiting for runtime thread', thread)
+				try:
+					thread.join(3600)
+					if verbose:
+						info('Waited for runtime thread', thread)
+				except BaseException as e:
+					if verbose:
+						info('Got exception while waiting for runtime thread', thread, e)
+					raise
 	def handOffIncomingChannel(self, channel):
 		with self._lock:
 			if channel.getFromNode() in self._incomingChannelThreads:
@@ -81,7 +86,7 @@ class KozoThread(threading.Thread):
 			infoRuntime(self, 'Running')
 			self.execute()
 			infoRuntime(self, 'Stopped')
-		except Exception as e:
+		except BaseException as e:
 			warnRuntime(self, 'Stopped with exception', e)
 
 class HeartbeatThread(KozoThread):
@@ -105,7 +110,7 @@ class TransportThread(KozoThread):
 				channel = self._transport.accept()
 				infoRuntime(self, 'Accepted channel', channel)
 				kozoRuntime().handOffIncomingChannel(channel)
-			except Exception as e:
+			except BaseException as e:
 				warnRuntime(self, 'Could not accept channel', e)
 
 class ReceptionThread(KozoThread):
@@ -118,11 +123,10 @@ class ReceptionThread(KozoThread):
 		infoRuntime(self, 'Killed')
 	def _receiveBytes(self, bytes, timeout):
 		totalData = b''
-		# This may take at most (bytes * timeout) seconds, but that is OK right now.
-		# If not, then this function also needs to keep track of time.
+		started = time.time()
 		while len(totalData) < bytes:
 			data = self._channel.wrapReceive(bytes, timeout)
-			if not data:
+			if not data or time.time() - started > timeout:
 				return b''
 			totalData += data
 		return totalData
@@ -142,20 +146,20 @@ class ReceptionThread(KozoThread):
 				else:
 					infoRuntime(self, 'Channel timeout while trying to read message size.')
 					self.kill()
-			except Exception as e:
+			except BaseException as e:
 				warnRuntime(self, 'Failed to receive message', e)
 				self.kill()
 
 class RoleThread(KozoThread):
 	def __init__(self, role):
 		self._role = role
-		self._incomingMessagesQueue = queue.Queue(self._role.getMessageQueueSize())
+		self._incomingMessagesQueue = RollingQueue(self._role.getMessageQueueSize())
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
 		self._dead = threading.Event()
 		self._role.setControllingThread(self)
 		self._role.init()
 	def deliver(self, message):
-		self._incomingMessagesQueue.put(message)
+		self._incomingMessagesQueue.push(message)
 	def sendMessage(self, message):
 		kozoRuntime().sendMessage(message)
 	def sleep(self, seconds):
@@ -164,13 +168,9 @@ class RoleThread(KozoThread):
 			raise KozoStopError()
 	def kill(self):
 		self._dead.set()
+		self._incomingMessagesQueue.interrupt()
 	def getMessage(self, blocking=True):
-		if blocking:
-			try:
-				return self._incomingMessagesQueue.get(True, kozoConfig('connectionRetry'))
-			except queue.Empty:
-				return None
-		return self._incomingMessagesQueue.get(False)
+		return self._incomingMessagesQueue.pop(blocking, kozoConfig('connectionRetry'))
 	def execute(self):
 		beforeTimestamp = None
 		rateControl = self._role.getRateControl()
@@ -192,11 +192,11 @@ class ConnectionThread(KozoThread):
 	def __init__(self, node):
 		self._node = node
 		self._channel = None
-		self._outgoingMessagesQueue = queue.Queue(kozoConfig('outgoingQueueSize'))
+		self._outgoingMessagesQueue = RollingQueue(kozoConfig('outgoingQueueSize'))
 		KozoThread.__init__(self, name='Connection to ' + str(self._node))
 		self.daemon = True
 	def sendMessage(self, message):
-		self._outgoingMessagesQueue.put_nowait(message)
+		self._outgoingMessagesQueue.push(message)
 	def _sendBytes(self, bytes):
 		while len(bytes):
 			sentBytes = self._channel.wrapSend(bytes)
@@ -216,8 +216,8 @@ class ConnectionThread(KozoThread):
 			if self._channel is None or not self._channel.isAlive():
 				originNode = kozoSystem().getSelfNode()
 				targetNode = self._node
-				for originTransport in sorted(originNode.getTransports(), key=lambda t: t.getPriority()):
-					for targetTransport in sorted(targetNode.getTransports(), key=lambda t: t.getPriority()):
+				for originTransport in sorted(originNode.getTransports(), key=lambda t: t.getPriority(), reverse=True):
+					for targetTransport in sorted(targetNode.getTransports(), key=lambda t: t.getPriority(), reverse=True):
 						if originTransport.canConnect(targetTransport):
 							try:
 								infoRuntime(self, 'Attempting to connect', originTransport, 'to', targetTransport)
@@ -226,17 +226,21 @@ class ConnectionThread(KozoThread):
 									infoRuntime(self, 'Connection failed (None returned)')
 									continue
 								infoRuntime(self, 'Successful connection', self._channel)
-							except Exception as e:
+							except BaseException as e:
 								infoRuntime(self, 'Connection failed', e)
 								self.kill()
 			if self._channel is not None:
 				try:
-					toDeliver = self._outgoingMessagesQueue.get(True, kozoConfig('connectionRetry'))
-					messageBytes = toDeliver.toBytes()
-					if self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes) == 0:
-						infoRuntime(self, 'Could not send message; assuming connection is dead.')
-						self.kill()
-				except queue.Empty:
-					warnRuntime(self, 'Did not send any mesage during the last period, is heartbeat thread dead?', e)
+					toDeliver = self._outgoingMessagesQueue.pop(True, kozoConfig('connectionRetry'))
+					if toDeliver is not None:
+						messageBytes = toDeliver.toBytes()
+						if self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes) == 0:
+							infoRuntime(self, 'Could not send message; assuming connection is dead.')
+							self.kill()
+					else:
+						warnRuntime(self, 'Did not send any mesage during the last period, is heartbeat thread dead?', e)
+				except BaseException as e:
+					warnRuntime(self, 'Got exception while trying to send, assuming connection is dead.', e)
+					self.kill()
 			else:
 				time.sleep(kozoConfig('connectionRetry'))

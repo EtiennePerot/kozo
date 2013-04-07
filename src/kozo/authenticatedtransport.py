@@ -62,7 +62,7 @@ class AuthenticatedTransport(Transport):
 				transport.auth_publickey('', self._privateKey)
 				channel = transport.open_channel('kozo')
 				return AuthenticatedChannel(self.getNode(), otherTransport.getNode(), channel)
-			except Exception as e:
+			except BaseException as e:
 				infoTransport(self, 'Failed to connect to', address, e, printTraceback=False)
 	def accept(self):
 		infoTransport(self, 'Waiting for a connection')

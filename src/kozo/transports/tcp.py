@@ -1,5 +1,6 @@
 import socket
 import six
+from kozo import kozoConfig
 from kozo.authenticatedtransport import AuthenticatedTransport
 from kozo.log import infoTransport
 
@@ -10,6 +11,8 @@ class TCPTransport(AuthenticatedTransport):
 		if len(self['address']) < 0:
 			raise KozoError('Must provide at least one address.')
 		self._serverSocket = None
+	def getPriority(self):
+		return TCPTransport.Priority_BEST
 	def bind(self):
 		AuthenticatedTransport.bind(self)
 		self._serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,9 +22,7 @@ class TCPTransport(AuthenticatedTransport):
 	def getUnauthenticatedConnectAddresses(self, otherTransport):
 		return [(address,  otherTransport['port']) for address in otherTransport['address']]
 	def getUnauthenticatedSocket(self, otherTransport, addressIndex, address):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect(address)
-		return sock
+		return socket.create_connection(address, kozoConfig('connectionRetry'))
 	def acceptUnauthenticatedConnection(self):
 		return self._serverSocket.accept()[0]
 
