@@ -1,16 +1,19 @@
 import collections
+import imp
 import os
 import random
 import sys
 import time
 import threading
 
-def importFile(file):
-	previousPath = sys.path[:]
-	sys.path = [os.path.dirname(file)] + sys.path
-	importedFile = __import__(os.path.basename(file)[:os.path.basename(file).rfind('.')])
-	sys.path = previousPath
-	return importedFile
+def importFile(file, namePrefix='kozo_module_'):
+	moduleName = namePrefix + os.path.basename(file)
+	if moduleName.lower().endswith('.py'):
+		moduleName = moduleName[:-3]
+	imp.acquire_lock()
+	newModule = imp.load_source(moduleName, file)
+	imp.release_lock()
+	return newModule
 
 def randomWait(upTo, sleepFunction=time.sleep):
 	return sleepFunction(random.uniform(0, upTo))
