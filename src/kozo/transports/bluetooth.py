@@ -68,11 +68,11 @@ transportInfo = {
 	'description': 'Transport over Bluetooth.',
 	'config': {
 		'uuid': {
-			'description': 'A UUID that is used to identity this transport. Can be anything, just run uuidgen to generate one.'
+			'description': 'A UUID that is used to identify this transport (not for authentication). Can be any UUID, just run `uuidgen` to generate one.'
 		},
 		'address': {
 			'default': None,
-			'description': 'The MAC address of the Bluetooth adapter. If not provided, the node will set the adapter to publicly discoverable, and other nodes will prod all nearby Bluetooth devices. If not provided, the node will not be publicly discoverable, and other nodes will prod only the correct device. You can find out your adapter\'s MAC address by typing `hciconfig`.'
+			'description': 'The MAC address of the Bluetooth adapter. If not provided, the node will set the adapter to publicly discoverable, and other nodes will prod all nearby Bluetooth devices. If provided, the node will not be publicly discoverable, and other nodes will prod only the correct device. You can find out your adapter\'s MAC address by typing `hciconfig`.'
 		},
 		'socketConnectionBacklog': {
 			'default': 256,
