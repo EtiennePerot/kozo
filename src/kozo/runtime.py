@@ -174,9 +174,9 @@ class RoleThread(KozoThread):
 	def execute(self):
 		beforeTimestamp = None
 		rateControl = self._role.getRateControl()
-		if rateControl is not None:
-			randomWait(rateControl, sleepFunction=self.sleep)
 		try:
+			if rateControl is not None:
+				randomWait(rateControl, sleepFunction=self.sleep)
 			while not self._dead.is_set():
 				beforeTimestamp = time.time()
 				self._role.run()
