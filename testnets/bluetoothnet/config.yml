@@ -1,0 +1,27 @@
+system:
+        node1:
+                privateKey: testnets/bluetoothnet/keys/node1
+                publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAVLVzV9IEDn4+oEM7vNd7gs1Sq3Lgt7/2RQ0s+80bJbpSBUkwmdGcX0Zi5cGRFAAOnSaZfrAJxB+nL6Ofq3VjOmD8kkn4NmKYIRJiSTYbOy/7lwPAXDqMtOGG7JsgMA0EmQrr5U4Q99Wy21vmMw60vH5sHeSLDYm3O7r4JpxLXIlCjWVqxV5lL9XyidwYZbS/Yux26M/XJxl80DSe0tPyrtN0b28XzSqSpdfscZGom3fvVjStjlqkwKhlCPJmT8HBy9KQ/E0ufM1lop850ZarLcrsQV4HCJ2ljcsNO9497vPXxELZLjVRWavISCK1BNEL20UTGcbl/1vGWsVFPUlr
+                roles:
+                        timer1:
+                                type: timer
+                                tick: 3
+                        cuckoo:
+                                timer: timer2
+                transports:
+                        bluetooth:
+                                uuid: 6e195c3b-c291-4a3d-817e-82e411f9440a
+        node2:
+                privateKey: testnets/bluetoothnet/keys/node2
+                publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
+                roles:
+                        timer2:
+                                type: timer
+                                tick: 7
+                        cuckoo:
+                                timer: timer1
+                transports:
+                        bluetooth:
+                                uuid: 4c76851c-07a3-4c11-bc20-95d564216b6e
+heartbeat: 1
+connectionRetry: 3
