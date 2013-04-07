@@ -16,9 +16,12 @@ class _logThread(_threading.Thread):
 		_threading.Thread.__init__(self, name='Logging thread')
 		self.daemon = True
 	def run(self):
-		while True:
-			level, message = _logQueue.get()
-			_localLogger.log(level, message)
+		try:
+			while True:
+				level, message = _logQueue.get()
+				_localLogger.log(level, message)
+		except BaseException: # Weird errors may occur when shutting down the system and the logger is destroyed
+			pass
 
 _logThreadInstance = _logThread()
 _logThreadInstance.start()

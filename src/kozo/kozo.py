@@ -228,6 +228,8 @@ def kozo(config, selfNode): # System entry point
 	from .confmap import Config
 	from .roles import kozoRole
 	from .transports import kozoTransport
+	from .log import info
+	info('Kozo system is being defined.')
 	_kozoConfig = Config('main', config, _kozoConfigDefault)
 	for nodeName, nodeConf in config['system'].items():
 		node = Node(nodeName, nodeConf)
@@ -246,4 +248,5 @@ def kozo(config, selfNode): # System entry point
 				transportClass = kozoTransport(transportName)
 			node.addTransport(transportClass(transportName, transportConf))
 	kozoSystem()._setSelfNode(selfNode)
+	info('Kozo system defined. Starting runtime.')
 	kozoSystem().run()
