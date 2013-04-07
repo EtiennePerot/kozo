@@ -123,10 +123,10 @@ class ReceptionThread(KozoThread):
 		infoRuntime(self, 'Killed')
 	def _receiveBytes(self, bytes, timeout):
 		totalData = b''
-		started = time.time()
+		maxTime = time.time() + timeout
 		while len(totalData) < bytes:
 			data = self._channel.wrapReceive(bytes, timeout)
-			if not data or time.time() - started > timeout:
+			if not data or time.time() > maxTime:
 				return b''
 			totalData += data
 		return totalData
