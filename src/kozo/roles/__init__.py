@@ -1,6 +1,6 @@
 import os
 import sys
-from kozo import KozoError
+from kozo import KozoError, kozoConfig
 from kozo.helpers import importFile as _importFile
 
 _roles = {}
@@ -12,6 +12,8 @@ def kozoRole(role):
 	paths = [os.path.dirname(os.path.abspath(__file__))]
 	if 'KOZOROLEPATH' in os.environ:
 		paths.extend(os.environ['KOZOROLEPATH'].split(':'))
+	if kozoConfig('rolePath'):
+		paths.extend(kozoConfig('rolePath').split(':'))
 	for path in paths:
 		if os.path.isdir(path) and os.path.isfile(path + os.sep + role + '.py'):
 			roleFile = path + os.sep + role + '.py'

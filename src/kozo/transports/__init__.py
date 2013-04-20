@@ -1,6 +1,6 @@
 import os
 import sys
-from kozo import KozoError
+from kozo import KozoError, kozoConfig
 from kozo.helpers import importFile as _importFile
 
 _transports = {}
@@ -12,6 +12,8 @@ def kozoTransport(transport):
 	paths = [os.path.dirname(os.path.abspath(__file__))]
 	if 'KOZOTRANSPORTPATH' in os.environ:
 		paths.extend(os.environ['KOZOTRANSPORTPATH'].split(':'))
+	if kozoConfig('transportPath'):
+		paths.extend(kozoConfig('transportPath').split(':'))
 	for path in paths:
 		if os.path.isdir(path) and os.path.isfile(path + os.sep + transport + '.py'):
 			transportFile = path + os.sep + transport + '.py'

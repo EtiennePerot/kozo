@@ -70,8 +70,8 @@ class Role(Configurable):
 			self._controllingThread.kill()
 
 class Transport(Configurable):
-	Priority_BEST = 3
-	Priority_GOOD = 2
+	Priority_BEST = 4
+	Priority_GOOD = 3
 	Priority_MEH = 2
 	Priority_BAD = 1
 	Priority_WORST = 0
@@ -216,7 +216,9 @@ _kozoConfigDefault = {
 	'connectionRetry': 60,
 	'outgoingQueueSize': 128,
 	'cipher': 'aes256-ctr',
-	'hmac': 'hmac-sha1'
+	'hmac': 'hmac-sha1',
+	'rolePath': '',
+	'transportPath': ''
 }
 def kozoConfig(key):
 	return _kozoConfig[key]
