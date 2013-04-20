@@ -42,9 +42,12 @@ This design decision reflects the intended purpose of Kōzō's Messages: Event n
     * [tmux]
 * Regular Kōzō dependencies
 
-### Specific role dependencies
+### Specific Role dependencies
 * `roles/bluetooth-discover.py`: [PyBluez]
 * `roles/motion-detect.py`: Either [RPIO] or [RPi.GPIO]
+
+### Specific Transport dependencies
+* `transports/bluetooth.py`: [PyBluez]
 
 ## Usage
 
