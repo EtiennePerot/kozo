@@ -51,7 +51,7 @@ This design decision reflects the intended purpose of Kōzō's Messages: Event n
 In a Kōzō network, each Node possesses the following:
 
 * A name
-* A copy of the [YAML] configuration file
+* A copy of the [YAML] configuration file describing the network
 * A public/private [SSH] keypair (used for communication authentication, encryption, and integrity)
 * Zero or more Roles
 * Zero or more Transports
@@ -60,31 +60,33 @@ In a Kōzō network, each Node possesses the following:
 
 Here is an example configuration file:
 
-	system:
-		clock:
-			privateKey: /var/lib/kozo/mykey
-			publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAVLVzV9IEDn4+oEM7vNd7gs1Sq3Lgt7/2RQ0s+80bJbpSBUkwmdGcX0Zi5cGRFAAOnSaZfrAJxB+nL6Ofq3VjOmD8kkn4NmKYIRJiSTYbOy/7lwPAXDqMtOGG7JsgMA0EmQrr5U4Q99Wy21vmMw60vH5sHeSLDYm3O7r4JpxLXIlCjWVqxV5lL9XyidwYZbS/Yux26M/XJxl80DSe0tPyrtN0b28XzSqSpdfscZGom3fvVjStjlqkwKhlCPJmT8HBy9KQ/E0ufM1lop850ZarLcrsQV4HCJ2ljcsNO9497vPXxELZLjVRWavISCK1BNEL20UTGcbl/1vGWsVFPUlr
-			roles:
-				timer1:
-					type: timer
-					tick: 60
-			transports:
-				tcp:
-					address: clock.local, 10.13.37.2, gnreiuoyh5rrtkjhe4r5j5423t4egyr.onion
-		scribe:
-			privateKey: /var/lib/kozo/mykey
-			publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
-			roles:
-				cuckoo:
-					timer: timer1
-				logger:
-					file: /var/log/kozo/scribe.log
-					clearLog: true
-			transports:
-				tcp:
-					address: scribe.local, 10.13.37.51, oierhgioenhi54j4jnmr56kdshbded.onion
-	heartbeat: 30
-	cipher: aes256-ctr
+```yaml
+system:
+	clock:
+		privateKey: /var/lib/kozo/mykey
+		publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAVLVzV9IEDn4+oEM7vNd7gs1Sq3Lgt7/2RQ0s+80bJbpSBUkwmdGcX0Zi5cGRFAAOnSaZfrAJxB+nL6Ofq3VjOmD8kkn4NmKYIRJiSTYbOy/7lwPAXDqMtOGG7JsgMA0EmQrr5U4Q99Wy21vmMw60vH5sHeSLDYm3O7r4JpxLXIlCjWVqxV5lL9XyidwYZbS/Yux26M/XJxl80DSe0tPyrtN0b28XzSqSpdfscZGom3fvVjStjlqkwKhlCPJmT8HBy9KQ/E0ufM1lop850ZarLcrsQV4HCJ2ljcsNO9497vPXxELZLjVRWavISCK1BNEL20UTGcbl/1vGWsVFPUlr
+		roles:
+			timer1:
+				type: timer
+				tick: 60
+		transports:
+			tcp:
+				address: clock.local, 10.13.37.2, gnreiuoyh5rrtkjhe4r5j5423t4egyr.onion
+	scribe:
+		privateKey: /var/lib/kozo/mykey
+		publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
+		roles:
+			cuckoo:
+				timer: timer1
+			logger:
+				file: /var/log/kozo/scribe.log
+				clearLog: true
+		transports:
+			tcp:
+				address: scribe.local, 10.13.37.51, oierhgioenhi54j4jnmr56kdshbded.onion
+heartbeat: 30
+cipher: aes256-ctr
+```
 
 Here is a detailed description of what each block does and accepts as options:
 
@@ -104,14 +106,25 @@ Here is a detailed description of what each block does and accepts as options:
 * `outgoingQueueSize`: The size of the buffer for outgoing Messages (in number of Messages). Each Node holds such a buffer for every other Node in the system. Default: `128`.
 * `cipher`: The cipher to use for all communication. Default: `aes256-ctr`.
 * `hmac`: The MAC algorithm to use for all communication. Default: `hmac-sha1`.
+* `rolePath`: A colon-separated list of directories in which custom Role files are located. Default: Empty.
+* `transportPath`: A colon-separated list of directories in which custom Transport files are located. Default: Empty.
 
-#### Available roles
-
-TODO
-
-#### Available transports
+#### Available Roles
 
 TODO
+
+#### Available Transports
+
+*Note*: All communication is encrypted and authenticated regardless of the Transport used. The only purpose of a Transport is to move bits from one Node to another, nothing more.
+
+* `tcp`: A standard TCP connection. This is the fastest and most reliable Transport.
+    * `address`: A comma-separated list of addresses (can be IP addresses, domain names, .onion addresses, local network names, etc) that all point to the Node. These addresses are not used for binding; they are used by other Nodes in order to make a connection.
+    * `port` (Optional): The local TCP port to bind to. The `tcp` Transport will always bind on all interfaces on that port.
+    * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
+* `bluetooth`: Communication over Bluetooth. Useful when a device has no Wi-Fi networking capability (or you don't want to give it access to your Wi-Fi network).
+    * `uuid`: A random UUID that will identify this service. Can be any valid UUID; you can generate one by running `uuidgen`.
+    * `address` (Optional): The MAC address of the Bluetooth interface of the Node. If specified, other Nodes will know instantly which Bluetooth device to connect to, which makes the connection process a lot faster. If unspecified, other Nodes will need to poke every Bluetooth device in range and ask for their list of services, until they find one with a matching UUID. This approach takes a lot longer, but it allows you to make the Node spoof its MAC address every so often without adverse consequences. Once the Bluetooth connection is established, the performance is the same whether or not the MAC address was specified.
+    * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
 
 ### Running the system
 
@@ -129,7 +142,122 @@ TODO
 
 ### Writing custom Transports
 
-TODO
+Writing Transports is a matter of extending either the `Transport` or the `AuthenticatedTransport` class. You should preferrably extend `AuthenticatedTransport` and you will get encryption and authentication for free. If your underlying Transport already includes encryption and authentication, then it may be worth subclassing `Transport` directly to avoid doubling the cryptographic overhead.
+
+Once you have done that, you must register the Transport with the system.
+
+#### Subclassing `AuthenticatedTransport`
+
+The `AuthenticatedTransport` class deals with socket-like objects. A socket-like object is an object which presents the following methods:
+
+* `send(self, bytes)`: Writes between 1 and `len(bytes)` bytes from `bytes` to the socket, and returns the number of bytes that were written. On timeout, raises `socket.timeout()`.
+* `recv(self, numBytes)`: Reads between 1 and `numBytes` bytes from the socket, and returns them. On remote socket closed, raises `socket.error(104, 'Connection reset by peer')`. On timeout, raises `socket.timeout()`.
+* `settimeout(self, timeout)`: Accepts a float value (in seconds) as timeout on read and write operations.
+* `close(self)`: Closes the socket. No `send` or `recv` operations will be executed on the socket once this method is called.
+
+An `AuthenticatedTransport` subclass **must** implement the following methods:
+
+* `acceptUnauthenticatedConnection(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. Then, the method should return a socket-like object corresponding to the connection that was just made.
+* `getUnauthenticatedConnectAddresses(self, otherTransport)`: Should return an iterable of objects (which often just contains one value), each of which should be meaningful as input to the `getUnauthenticatedSocket` method described below, that allows the local Node to connect to the `otherTransport` Node. Each value will be tested in the order of iteration until a connection is made. For example, for the TCP transport, this list simply contains the IP addresses and domain names that `otherTransport`'s Node can be reached at.
+* `getUnauthenticatedSocket(self, otherTransport, addressIndex, address)`: Should attempt to connect to `otherTransport` via the provided `address`, which is just one of the objects returned by `getUnauthenticatedConnectAddresses`, at index `addressIndex` in the iteration. If a connection is successful, this should return a socket-like object. Otherwise, this should return `None`.
+
+Additionally, an `AuthenticatedTransport` subclass **may** override the following methods:
+
+* `init(self)`: This will be called during initialization on **all Nodes in the system**. As such, no networking should ever happen here, only basic initialization and state-setting. It is better to do such work here rather than in the constructor, because the whole network may not be completely represented at the time the constructor is called. If you override this, you should **always** call the `.init()` method of the parent class as well.
+* `bind(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.bind()` method of the parent class as well.
+* `getPriority(self)`: Returns a priority indicator (from `Transport.Priority_WORST` to `Transport.Priority_BEST`) indicating the preference the system should have regarding the Transport to pick in order to establish a connection from one Node to another. The faster and the more reliable the Transport, the higher its priority should be. The default is `Transport.Priority_MEH`.
+* `canConnect(self, otherTransport)`: This should return `True` if this Transport can be used to connect to `otherTransport`, otherwise `False`. The default implementation returns `True` if both Transports are of the same class, so there is no need to override this method if that is the only check you will be doing.
+
+An `AuthenticatedTransport` subclass **should not** override the following methods (but may call them, if appropriate):
+
+* `getNode(self)`: Returns the Node object that offers this Transport.
+* `isSelf(self)`: Returns whether the Node running the Python interpreter right now is the same as the Node offering this Transport.
+* `self['key']`: Returns the value (default or not) associated with `key` in the configuration of this subclass. See the metadata section for details.
+
+*Note*: Other methods exist but are not meant to be interacted with.
+
+#### Subclassing `Transport` directly
+
+**Important**: If you decide to go this route, it is up to you to properly implement encryption and authentication for all communication.
+
+The `Transport` class deals with `Channel` instances. It is up to you to build these instances with all the state they need. A `Channel` subclass **must** override the following methods:
+
+* `__init__(self, *args, **kwargs)`: You may design the constructor as you like, but it must call the `Channel`'s base constructor: `Channel(fromNode, toNode)`.
+* `send(self, bytes)`: Writes between 1 and `len(bytes)` bytes from `bytes`, and returns the number of bytes that were transmitted. On error, returns `None`.
+* `receive(self, bytes, timeout)`: Reads between 1 and `numBytes` bytes from the socket, and returns them. On error or timeout (specified as a float in seconds), returns `None`.
+
+`Channel` subclasses have the following methods available to them (but they should not be overridden):
+
+* `getFromNode(self)`: Returns the Node object on the Sender side of the Channel.
+* `getToNode(self)`: Returns the Node object on the Receiver side of the Channel.
+* `isAlive(self)`: Returns whether this Channel should still be used for communication or not.
+
+*Note*: Other methods exist but are not meant to be interacted with.
+
+Once your `Channel` subclass is properly defined, you can create your `Transport` subclass. A `Transport` subclass **must** implement the following methods:
+
+* `accept(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. It should then perform authentication and set up an encryption key for communication. Then, the method should return a `Channel` object corresponding to the connection that was just made.
+* `connect(self, otherTransport)`: Should attempt to connect to `otherTransport`, perform authentication and set up encryption, and then return a `Channel` object on success, or `None` on failure.
+
+Additionally, a `Transport` subclass **may** override the following methods:
+
+* `init(self)`: This will be called during initialization on **all Nodes in the system**. As such, no networking should ever happen here, only basic initialization and state-setting. It is better to do such work here rather than in the constructor, because the whole network may not be completely represented at the time the constructor is called. If you override this, you should **always** call the `.init()` method of the parent class as well.
+* `bind(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.bind()` method of the parent class as well.
+* `getPriority(self)`: Returns a priority indicator (from `Transport.Priority_WORST` to `Transport.Priority_BEST`) indicating the preference the system should have regarding the Transport to pick in order to establish a connection from one Node to another. The faster and the more reliable the Transport, the higher its priority should be. The default is `Transport.Priority_MEH`.
+* `canConnect(self, otherTransport)`: This should return `True` if this Transport can be used to connect to `otherTransport`, otherwise `False`. The default implementation returns `True` if both Transports are of the same class, so there is no need to override this method if that is the only check you will be doing.
+
+An `AuthenticatedTransport` subclass **should not** override the following methods (but may call them, if appropriate):
+
+* `getNode(self)`: Returns the Node object that offers this Transport.
+* `isSelf(self)`: Returns whether the Node running the Python interpreter right now is the same as the Node offering this Transport.
+* `self['key']`: Returns the value (default or not) associated with `key` in the configuration of this subclass. See the metadata section for details.
+
+*Note*: Other methods exist but are not meant to be interacted with.
+
+#### Adding Transport metadata
+
+Once you have defined your subclass, you need to provide information about it to Kōzō. This is done by adding a dictionary called `transportInfo` at the end of the file. Here is an annotated example of such a dictionary:
+
+```python
+transportInfo = {
+    'format': '1.0',                                      # Should always be 1.0 for now
+    'class': MyTransport,                                 # Direct reference to the subclass
+    'author': 'John Smith',                               # Author name
+    'version': '1.0',                                     # Version of this Transport
+    'description': 'A simple TCP socket transport.',      # Description of this Transport
+    'config': {                                           # Configuration options
+        'port': {                                         # Name of the configuration option
+            'default': 9001,                              # Default value of the configuration option
+            'description': 'TCP port to bind to.'         # Description of the configuration option
+        },
+        'address': {                                      # Name of the configuration option
+            'description': 'An address or a list of addresses that the node can be reached from.'
+                                                          # ^ Description of this configuration option
+            # Since this configuration option doesn't have a default value, it will be considered
+            # to be a required option. The system will refuse to start if it is not provided.
+        }
+    }
+}
+```
+
+#### Using custom Transports
+
+Once you have written your custom Transport file, you have three options:
+
+* Drop it in `src/kozo/transports` (easy, but not always possible if installed as a system package).
+* Set the environment variable `KOZOTRANSPORTPATH` to be a colon-separated list of directories containing custom Transports, then drop your Transport file in one of these directories.
+* Set the `transportPath` option in your network configuration file (see above), then drop your Transport file in one of these directories.
+
+To use your custom Transport, you can refer it by its file name in the configuration file. For example, if you name it `mytransport.py`, then your config file should look like this:
+
+```yaml
+system:
+	mynode:
+		transports:
+			mytransport:
+				port: 9002
+				address: hello
+```
 
 [Python 2]: http://www.python.org/
 [Paramiko]: http://www.lag.net/paramiko/
