@@ -4,17 +4,7 @@ class KozoError(RuntimeError):
 class KozoStopError(KozoError):
 	pass
 
-class Configurable(object):
-	def __init__(self, name, providedConfig, defaultConfig={}, requiredKeys=[]):
-		from .confmap import Config
-		self._name = name
-		self._config = Config(name, providedConfig, defaultConfig, requiredKeys)
-	def __getitem__(self, key):
-		return self._config[key]
-	def __setitem__(self, key, value):
-		self._config[key] = value
-	def __str__(self):
-		return self._name
+from .confsys import *
 
 class Role(Configurable):
 	def __init__(self, name, providedConfig):
@@ -227,7 +217,6 @@ def kozo(config, selfNode): # System entry point
 	global _kozoConfig
 	if _kozoConfig is not None:
 		raise KozoError('Can only run one system.')
-	from .confmap import Config
 	from .roles import kozoRole
 	from .transports import kozoTransport
 	from .log import info
