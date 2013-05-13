@@ -114,7 +114,26 @@ Here is a detailed description of what each block does and accepts as options:
 
 #### Available Roles
 
-TODO
+The following Roles are distributed as part of Kōzō:
+
+* `timer`: A simple Role that emits a timer message (events of type `tick`) at a regular interval.
+    * `tick` (Optional): Number of seconds between each message. Default: 1 seccond
+    * `message` (Optional): A string to insert into every message
+* `cuckoo`: A simple Role that listens for `tick` events (messages sent by the `timer` Role) and prints them.
+    * `timer` (Optional): The name of the `timer` Role to listen to. Other `timer` Roles will be ignored. If unspecified, will listen to all `timer` Roles in the system.
+* `logger`: A Role that listens for `log` events. Roles may send log messages, and the `logger` role will pick them up, print them, and write them to a file. Useful to have a central Node log everything going on in the system.
+    * `file` (Optional): Path to a file where the log messages will be written. Default is `/var/log/kozo/kozo.log`
+    * `timePrefix` (Optional): Timestamp format used as prefix on each line. See [strftime](http://docs.python.org/2/library/time.html#time.strftime) for the available variables. Default is `[%Y-%m-%d %H:%M:%S] `, with a space at the end so that there is a gap between the timestamp and the message itself.
+    * `flushEvery` (Optional): The log file will be flushed every `flushEvery` messages. By default, it is flushed every 1024 messages.
+    * `clearLog` (Optional): Whether to clear any existing log file when starting up. The default is not to do so.
+* `bluetooth-discover`: Scans around for discoverable Bluetooth devices every so often.
+    * `searchDuration` (Optional): How long to spend searching for devices. The default is 8 seconds.
+    * `cooldown` (Optional): How long to wait between searches. The default is 30 seconds.
+    * `log` (Optional): Whether or not to send a `log` message whenever one or more devices enter or leave the set of nearby Bluetooth devices. Note that the `bluetooth-discover` Role will send a `bluetooth devices in range` event regularly after each search containing all information about all devices in range at the time; the `log` parameter is simply there to make it easy to log this information in a concise manner.
+* `motion-detect`: Reports movement given by a GPIO pin. Meant to be used with the Raspberry Pi, as [helpfully described by Adafruit Industries here](http://learn.adafruit.com/adafruits-raspberry-pi-lesson-12-sensing-movement).
+    * `pin` (Optional): Pin number of the motion detector's output wire. Default is pin 18.
+    * `period`: How many seconds to wait between motion detection checks. Default is 0.5.
+    * `log` (Optional): Whether or not to send a log message every time motion starts or stops. Note that the `motion-detect` Role will send a `motion detection` event regularly every `period` seconds saying whether there was motion or not; the `log` parameter is simply there to make it easy to log this information in a concise manner.
 
 #### Available Transports
 

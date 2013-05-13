@@ -19,10 +19,6 @@ roleInfo = {
 		'timer': {
 			'default': '*',
 			'description': 'Name of the timer to respond to, or "*" to respond to all timers'
-		},
-		'message': {
-			'default': 'Cuckoo!',
-			'description': 'Message to show in local log at every tick'
 		}
 	}
 }
