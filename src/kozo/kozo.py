@@ -34,10 +34,14 @@ class Role(Configurable):
 	def getMessage(self, blocking=True):
 		if self._controllingThread is not None:
 			return self._controllingThread.getMessage(blocking)
-	def sendEvent(self, eventType, eventData={}):
+	def sendEvent(self, eventType, channel=None, data={}):
 		from .messages import Event
 		if self._controllingThread is not None:
-			self._controllingThread.sendMessage(Event(self, eventType, eventData))
+			self._controllingThread.sendMessage(Event(self, eventType, channel, data))
+	def sendOrder(self, orderType, channel=None, data={}):
+		from .messages import Order
+		if self._controllingThread is not None:
+			self._controllingThread.sendMessage(Order(self, orderType, channel, data))
 	def sendLog(self, *logMessage):
 		from .messages import Log
 		if self._controllingThread is not None:

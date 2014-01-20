@@ -9,7 +9,7 @@ class MotionDetector(Role):
 		return self['period']
 	def run(self):
 		hasMotion = rpio.input(self['pin'])
-		self.sendEvent('motion detection', hasMotion)
+		self.sendEvent('motion detection', data=hasMotion)
 		if self['log'] and self._hadMotion != hasMotion:
 			if hasMotion:
 				self.sendLog('Motion detected!')

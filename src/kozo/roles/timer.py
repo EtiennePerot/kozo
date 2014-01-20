@@ -6,7 +6,7 @@ class Timer(Role):
 		return self['tick']
 	def run(self):
 		message = (self['message'], time.strftime('%H:%M:%S'))
-		self.sendEvent('tick', message)
+		self.sendEvent('tick', data=message)
 		self.info('Sent message:', message)
 
 roleInfo = {

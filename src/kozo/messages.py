@@ -76,10 +76,11 @@ class Heartbeat(_Message):
 		return kozoSystem().getNodesBy(lambda n: not n.isSelf())
 
 class RoleMessage(_Message):
-	def __init__(self, fromRole, type, data={}):
+	def __init__(self, fromRole, type, channel=None, data={}):
 		_Message.__init__(self, 'role', {
 			'roleMessageType': type,
 			'fromRole': fromRole.getName(),
+			'channel': channel,
 			'roleData': data
 		})
 	def getRecipientNodes(self):
@@ -96,12 +97,14 @@ class RoleMessage(_Message):
 		return self.getSender().getRoleByName(self.getData()['fromRole'])
 	def getSenderRoleClass(self):
 		return self.getSenderRole().__class__
+	def getChannel(self):
+		return self.getData()['channel']
 	def getRoleData(self):
 		return self.getData()['roleData']
 
 class Event(RoleMessage):
-	def __init__(self, fromRole, eventType, eventData={}):
-		RoleMessage.__init__(self, fromRole, 'event', {
+	def __init__(self, fromRole, eventType, channel=None, eventData={}):
+		RoleMessage.__init__(self, fromRole, 'event', channel=channel, data={
 			'eventType': eventType,
 			'eventData': eventData
 		})
@@ -111,8 +114,8 @@ class Event(RoleMessage):
 		return self.getRoleData()['eventData']
 
 class Order(RoleMessage):
-	def __init__(self, fromRole, orderType, orderData={}):
-		RoleMessage.__init__(self, fromRole, 'order', {
+	def __init__(self, fromRole, orderType, channel=None, orderData={}):
+		RoleMessage.__init__(self, fromRole, 'order', channel=channel, data={
 			'orderType': orderType,
 			'orderData': orderData
 		})
@@ -123,7 +126,7 @@ class Order(RoleMessage):
 
 class Log(RoleMessage):
 	def __init__(self, fromRole, *message):
-		RoleMessage.__init__(self, fromRole, 'log', {
+		RoleMessage.__init__(self, fromRole, 'log', data={
 			'message': ' '.join(map(str, message))
 		})
 	def getMessage(self):

@@ -10,7 +10,7 @@ class BluetoothDiscoverer(Role):
 		currentDevices = {}
 		for address, name in devices:
 			currentDevices[address.lower()] = name
-		self.sendEvent('bluetooth devices in range', currentDevices)
+		self.sendEvent('bluetooth devices in range', data=currentDevices)
 		if len(currentDevices):
 			self.info('Found Bluetooth devices:', currentDevices)
 		else:
