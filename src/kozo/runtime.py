@@ -181,7 +181,7 @@ class RoleThread(KozoThread):
 				beforeTimestamp = time.time()
 				self._role.run()
 				rateControl = self._role.getRateControl()
-				if type(rateControl) is int:
+				if type(rateControl) is int or type(rateControl) is float:
 					afterTimestamp = time.time()
 					if afterTimestamp - beforeTimestamp < rateControl:
 						self.sleep(rateControl - (afterTimestamp - beforeTimestamp))
