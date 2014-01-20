@@ -5,6 +5,7 @@ system:
                 roles:
                         timer1:
                                 type: timer
+                                description: A simple 30-second timer, cuckoo'd by node2.
                                 tick: 30
                 transports:
                         tcp:
@@ -16,7 +17,9 @@ system:
                 roles:
                         cuckoo:
                                 timer: timer1
+                                description: A simple cuckoo, responding to node1's timer1.
                         bluetooth-discover:
+                                description: A bluetooth discovery role just for kicks.
                 transports:
                         tcp:
                                 address: localhost
@@ -26,6 +29,7 @@ system:
                 publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClmIXxWuw60xwwAfRcquSlb1hFxnDwLeBx3ng+4rWRuKoWW6RwF4IYHf3kR44ii8Ov/PBDQZ5rAfAcW/pVix3eXjePCadUzep7NItNAOadofnA24/C9E5rhjQ99uKSzb+jp7L+5zja0VvkrAjkpOwsXHFY5vB7dl7Q5C6qphjdZ5R41RwyHeH0qXyq7szYOCAlt8jsDrlL9F/2/0JvCbN0YLAgwiOf5u2A+m6IVSJ266UF0bWL7V3GCZ52IwUMchUtdU06qCxQeAGJT6wY4SI4SxRjGhK3m8JKQ9xLOzkLNcBs/q+AXtIX7NXKbeijBcGgoFsNYQQK49hytVeNPQTp
                 roles:
                         logger:
+                                description: Main logger for the system.
                                 file: testnets/localnet/testnet.log
                                 clearLog: true
                 transports:

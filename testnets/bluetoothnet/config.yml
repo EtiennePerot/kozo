@@ -5,8 +5,10 @@ system:
                 roles:
                         timer1:
                                 type: timer
+                                description: A simple 3-second timer, cuckoo'd by node2.
                                 tick: 3
                         cuckoo:
+                                description: A simple cuckoo, responding to node2's timer2.
                                 timer: timer2
                 transports:
                         bluetooth:
@@ -17,8 +19,10 @@ system:
                 roles:
                         timer2:
                                 type: timer
+                                description: A simple 7-second timer, cuckoo'd by node1.
                                 tick: 7
                         cuckoo:
+                                description: A simple cuckoo, responding to node1's timer1.
                                 timer: timer1
                 transports:
                         bluetooth:
