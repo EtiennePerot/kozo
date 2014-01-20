@@ -20,8 +20,11 @@ def kozoTransport(transport):
 			break
 	if transportFile is None:
 		raise KozoError('Could not find transport:', transport, paths)
+	importPaths = kozoConfig('importPath').split(':')
+	if 'KOZOIMPORTPATH' in os.environ:
+		importPaths.extend(os.environ['KOZOIMPORTPATH'].split(':'))
 	try:
-		transportData = _importFile(transportFile)
+		transportData = _importFile(transportFile, extraPaths=filter(lambda p: p, importPaths))
 	except BaseException as e:
 		raise KozoError('Error while trying to import transport', transportFile, e)
 	if 'transportInfo' not in transportData.__dict__:

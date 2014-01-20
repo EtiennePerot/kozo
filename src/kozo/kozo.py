@@ -208,7 +208,8 @@ _kozoConfigDefault = {
 	'cipher': 'aes256-ctr',
 	'hmac': 'hmac-sha1',
 	'rolePath': '',
-	'transportPath': ''
+	'transportPath': '',
+	'importPath': '',
 }
 def kozoConfig(key):
 	return _kozoConfig[key]

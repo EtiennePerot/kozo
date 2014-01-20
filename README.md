@@ -112,6 +112,7 @@ Here is a detailed description of what each block does and accepts as options:
 * `hmac`: The MAC algorithm to use for all communication. Default: `hmac-sha1`.
 * `rolePath`: A colon-separated list of directories in which custom Role files are located. Default: Empty.
 * `transportPath`: A colon-separated list of directories in which custom Transport files are located. Default: Empty.
+* `importPath`: A colon-separated list of directories which will be prepended to the import paths, available for use in all Roles and Transports. This can be further extended with the KOZOIMPORTPATH environment variable. Default: Empty.
 
 #### Available Roles
 

@@ -20,8 +20,11 @@ def kozoRole(role):
 			break
 	if roleFile is None:
 		raise KozoError('Could not find role:', role, paths)
+	importPaths = kozoConfig('importPath').split(':')
+	if 'KOZOIMPORTPATH' in os.environ:
+		importPaths.extend(os.environ['KOZOIMPORTPATH'].split(':'))
 	try:
-		roleData = _importFile(roleFile)
+		roleData = _importFile(roleFile, extraPaths=filter(lambda p: p, importPaths))
 	except BaseException as e:
 		raise KozoError('Error while trying to import role', roleFile, e)
 	if 'roleInfo' not in roleData.__dict__:

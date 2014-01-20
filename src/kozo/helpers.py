@@ -6,13 +6,17 @@ import sys
 import time
 import threading
 
-def importFile(file, namePrefix='kozo_module_'):
+def importFile(file, namePrefix='kozo_module_', extraPaths=[]):
 	moduleName = namePrefix + os.path.basename(file)
 	if moduleName.lower().endswith('.py'):
 		moduleName = moduleName[:-3]
+	originalPath = sys.path[:]
+	for p in reversed(extraPaths):
+		sys.path.insert(0, p)
 	imp.acquire_lock()
 	newModule = imp.load_source(moduleName, file)
 	imp.release_lock()
+	sys.path = originalPath
 	return newModule
 
 def randomWait(upTo, sleepFunction=time.sleep):
