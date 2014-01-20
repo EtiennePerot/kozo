@@ -231,6 +231,8 @@ def kozo(config, selfNode): # System entry point
 				roleClass = kozoRole(roleConf['type'])
 			else:
 				roleClass = kozoRole(roleName)
+			if 'description' in roleConf:
+				del roleConf['description']
 			node.addRole(roleClass(roleName, roleConf))
 		for transportName, transportConf in nodeConf['transports'].items():
 			if 'type' in transportConf:
