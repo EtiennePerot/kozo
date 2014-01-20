@@ -17,9 +17,9 @@ class Logger(Role):
 		logMessage = self.getMessage()
 		if logMessage is None:
 			return
-		logLine = time.strftime(self._timePrefix) + '<' + logMessage.getSender().getName() + '> ' + logMessage.getMessage() + '\n'
+		logLine = time.strftime(self._timePrefix) + '<' + logMessage.getSender().getName() + '> ' + logMessage.getMessage()
 		try:
-			self._file.write(logLine)
+			self._file.write(logLine + '\n')
 			self.info(logLine)
 			self._flushCounter -= 1
 		except BaseException as e:
