@@ -25,6 +25,8 @@ class KozoRuntime(object):
 		for node in kozoSystem().getNodes():
 			for transport in node.getTransports():
 				transport.init()
+			for role in node.getRoles():
+				role.init()
 			if node.isSelf():
 				for transport in node.getTransports():
 					self._transportThreads.append(TransportThread(transport))
@@ -157,7 +159,7 @@ class RoleThread(KozoThread):
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
 		self._dead = threading.Event()
 		self._role.setControllingThread(self)
-		self._role.init()
+		self._role.localInit()
 	def deliver(self, message):
 		self._incomingMessagesQueue.push(message)
 	def sendMessage(self, message):

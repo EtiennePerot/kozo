@@ -57,6 +57,8 @@ class Role(Configurable):
 		return errorRole(self, *msg, **kwargs)
 	def init(self):
 		pass
+	def localInit(self):
+		pass
 	def run(self):
 		raise NotImplementedError()
 	def kill(self):

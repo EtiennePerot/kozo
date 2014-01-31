@@ -2,7 +2,7 @@ from kozo import Role
 import bluetooth
 
 class BluetoothDiscoverer(Role):
-	def init(self):
+	def localInit(self):
 		self._currentKnownDevices = {}
 	def run(self):
 		self.sleep(self['cooldown'])

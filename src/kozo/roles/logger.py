@@ -1,11 +1,9 @@
 import time
 from kozo import Role
-from kozo.messages import Log
+from kozo.messages import Log, RoleMessage
 
 class Logger(Role):
-	def isInterestedIn(self, message):
-		return isinstance(message, Log)
-	def init(self):
+	def localInit(self):
 		if self['clearLog']:
 			self._file = open(self['file'], 'w')
 		else:
@@ -13,11 +11,14 @@ class Logger(Role):
 		self._flushCounter = self['flushEvery']
 		self._timePrefix = self['timePrefix']
 		self._file.write(time.strftime(self._timePrefix) + 'Log started.\n')
+	def isInterestedIn(self, message):
+		return isinstance(message, Log)
 	def run(self):
 		logMessage = self.getMessage()
 		if logMessage is None:
 			return
-		logLine = time.strftime(self._timePrefix) + '<' + logMessage.getSender().getName() + '> ' + logMessage.getMessage()
+		sender = '%s@%s' % (logMessage.getSenderRole().getName(), logMessage.getSender().getName())
+		logLine = time.strftime(self._timePrefix) + '<' + sender + '> ' + logMessage.getMessage()
 		try:
 			self._file.write(logLine + '\n')
 			self.info(logLine)

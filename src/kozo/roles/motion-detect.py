@@ -3,7 +3,7 @@ from kozo.helpers import rpio
 rpio = rpio()
 
 class MotionDetector(Role):
-	def init(self):
+	def localInit(self):
 		self._hadMotion = False
 	def getRateControl(self):
 		return self['period']
