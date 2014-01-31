@@ -1,3 +1,12 @@
+# Constant usable as default value for role/transport configuration, autoreplaced with node name.
+NODE_NAME = object()
+
+# Constant usable as default value for role configuration, autoreplaced with role name.
+ROLE_NAME = object()
+
+# Constant usable as default value for transport configuration, autoreplaced with transport name.
+TRANSPORT_NAME = object()
+
 class Config(object):
 	def __init__(self, context, providedConfig, defaultConfig={}, requiredKeys=[]):
 		if providedConfig is None:

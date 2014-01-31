@@ -233,17 +233,17 @@ def kozo(config, selfNode): # System entry point
 			if roleConf is None:
 				roleConf = {}
 			if 'type' in roleConf:
-				roleClass = kozoRole(roleConf['type'])
+				roleClass = kozoRole(roleConf['type'], roleName, nodeName)
 			else:
-				roleClass = kozoRole(roleName)
+				roleClass = kozoRole(roleName, roleName, nodeName)
 			if 'description' in roleConf:
 				del roleConf['description']
 			node.addRole(roleClass(roleName, roleConf))
 		for transportName, transportConf in nodeConf['transports'].items():
 			if 'type' in transportConf:
-				transportClass = kozoTransport(transportConf['type'])
+				transportClass = kozoTransport(transportConf['type'], transportName, nodeName)
 			else:
-				transportClass = kozoTransport(transportName)
+				transportClass = kozoTransport(transportName, transportName, nodeName)
 			node.addTransport(transportClass(transportName, transportConf))
 	kozoSystem()._setSelfNode(selfNode)
 	info('Kozo system defined. Starting runtime.')

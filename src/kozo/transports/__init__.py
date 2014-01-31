@@ -1,10 +1,10 @@
 import os
 import sys
-from kozo import KozoError, kozoConfig
+from kozo import KozoError, kozoConfig, NODE_NAME, TRANSPORT_NAME
 from kozo.helpers import importFile as _importFile
 
 _transports = {}
-def kozoTransport(transport):
+def kozoTransport(transport, transportName, nodeName):
 	global _transports
 	if transport in _transports:
 		return _transports[transport]
@@ -41,7 +41,12 @@ def kozoTransport(transport):
 	transportConfigRequired = []
 	for key in transportData.transportInfo['config']:
 		if 'default' in transportData.transportInfo['config'][key]:
-			transportDefaultConfig[key] = transportData.transportInfo['config'][key]['default']
+			default = transportData.transportInfo['config'][key]['default']
+			if default is NODE_NAME:
+				default = nodeName
+			elif default is TRANSPORT_NAME:
+				default = transportName
+			transportDefaultConfig[key] = default
 		else:
 			transportConfigRequired.append(key)
 	transportClass._transportConfig = transportDefaultConfig

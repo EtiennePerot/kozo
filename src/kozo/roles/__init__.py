@@ -1,10 +1,10 @@
 import os
 import sys
-from kozo import KozoError, kozoConfig
+from kozo import KozoError, kozoConfig, NODE_NAME, ROLE_NAME
 from kozo.helpers import importFile as _importFile
 
 _roles = {}
-def kozoRole(role):
+def kozoRole(role, roleName, nodeName):
 	global _roles
 	if role in _roles:
 		return _roles[role]
@@ -41,7 +41,12 @@ def kozoRole(role):
 	roleConfigRequired = []
 	for key in roleData.roleInfo['config']:
 		if 'default' in roleData.roleInfo['config'][key]:
-			roleDefaultConfig[key] = roleData.roleInfo['config'][key]['default']
+			default = roleData.roleInfo['config'][key]['default']
+			if default is NODE_NAME:
+				default = nodeName
+			elif default is ROLE_NAME:
+				default = roleName
+			roleDefaultConfig[key] = default
 		else:
 			roleConfigRequired.append(key)
 	roleClass._roleConfig = roleDefaultConfig
