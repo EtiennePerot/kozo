@@ -31,9 +31,17 @@ class Role(Configurable):
 		if self['messageQueueSize'] is not None:
 			return self['messageQueueSize']
 		return 8
-	def getMessage(self, blocking=True):
+	def getMessage(self, timeout=None):
+		"""Get a message from our queue.
+
+		Arguments:
+			timeout: Timeout when waiting for a message. 0 for non-blocking, None for default timeout value. Custom values cannot surpass the default.
+
+		Returns:
+			A RoleMessage object, or None if we didn't receive anything in time.
+		"""
 		if self._controllingThread is not None:
-			return self._controllingThread.getMessage(blocking)
+			return self._controllingThread.getMessage(timeout)
 	def sendEvent(self, eventType, channel=None, data={}):
 		from .messages import Event
 		if self._controllingThread is not None:

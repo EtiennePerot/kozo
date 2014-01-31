@@ -171,8 +171,20 @@ class RoleThread(KozoThread):
 	def kill(self):
 		self._dead.set()
 		self._incomingMessagesQueue.interrupt()
-	def getMessage(self, blocking=True):
-		return self._incomingMessagesQueue.pop(blocking, kozoConfig('connectionRetry'))
+	def getMessage(self, timeout=None):
+		"""Get a message from the incoming message queue.
+
+		Arguments:
+			timeout: Timeout when waiting for a message. 0 for non-blocking, None for default timeout value. Custom values cannot surpass the default.
+
+		Returns:
+			A RoleMessage object, or None if we didn't receive anything in time.
+		"""
+		if timeout is None:
+			timeout = kozoConfig('connectionRetry')
+		else:
+			timeout = min(timeout, kozoConfig('connectionRetry'))
+		return self._incomingMessagesQueue.pop(timeout > 0, timeout)
 	def execute(self):
 		beforeTimestamp = None
 		rateControl = self._role.getRateControl()
