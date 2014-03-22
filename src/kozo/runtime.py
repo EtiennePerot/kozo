@@ -196,6 +196,9 @@ class RoleThread(KozoThread):
 				self._role.run()
 				rateControl = self._role.getRateControl()
 				if type(rateControl) is int or type(rateControl) is float:
+					if self._role.getMessageRateControlOverride() and not self._incomingMessagesQueue.isEmpty():
+						# We have a message, don't sleep
+						continue
 					afterTimestamp = time.time()
 					if afterTimestamp - beforeTimestamp < rateControl:
 						self.sleep(rateControl - (afterTimestamp - beforeTimestamp))
