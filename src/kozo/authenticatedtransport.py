@@ -14,7 +14,7 @@ class _KozoSSHServerInterface(paramiko.ServerInterface):
 	def __init__(self, *args, **kwargs):
 		paramiko.ServerInterface.__init__(self, *args, **kwargs)
 		self._key = None
-	def get_allowed_auths(self):
+	def get_allowed_auths(self, username):
 		return 'publickey'
 	def check_auth_publickey(self, username, key):
 		if username == '':
