@@ -1,6 +1,6 @@
 import os
 import sys
-from kozo import KozoError, kozoConfig, NODE_NAME, ROLE_NAME
+from kozo import KozoError, kozoConfig, NODE_NAME, ROLE_NAME, ROLENODE_NAME
 from kozo.helpers import importFile as _importFile
 
 _roles = {}
@@ -46,6 +46,8 @@ def kozoRole(role, roleName, nodeName):
 				default = nodeName
 			elif default is ROLE_NAME:
 				default = roleName
+			elif default is ROLENODE_NAME:
+				default = '%s@%s' % (roleName, nodeName)
 			roleDefaultConfig[key] = default
 		else:
 			roleConfigRequired.append(key)

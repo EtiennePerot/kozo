@@ -1,6 +1,6 @@
 import os
 import sys
-from kozo import KozoError, kozoConfig, NODE_NAME, TRANSPORT_NAME
+from kozo import KozoError, kozoConfig, NODE_NAME, TRANSPORT_NAME, TRANSPORTNODE_NAME
 from kozo.helpers import importFile as _importFile
 
 _transports = {}
@@ -46,6 +46,8 @@ def kozoTransport(transport, transportName, nodeName):
 				default = nodeName
 			elif default is TRANSPORT_NAME:
 				default = transportName
+			elif default is TRANSPORTNODE_NAME:
+				default = '%s@%s' % (transportName, nodeName)
 			transportDefaultConfig[key] = default
 		else:
 			transportConfigRequired.append(key)
