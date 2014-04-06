@@ -41,14 +41,7 @@ def kozoRole(role, roleName, nodeName):
 	roleConfigRequired = []
 	for key in roleData.roleInfo['config']:
 		if 'default' in roleData.roleInfo['config'][key]:
-			default = roleData.roleInfo['config'][key]['default']
-			if default is NODE_NAME:
-				default = nodeName
-			elif default is ROLE_NAME:
-				default = roleName
-			elif default is ROLENODE_NAME:
-				default = '%s@%s' % (roleName, nodeName)
-			roleDefaultConfig[key] = default
+			roleDefaultConfig[key] = roleData.roleInfo['config'][key]['default']
 		else:
 			roleConfigRequired.append(key)
 	roleClass._roleConfig = roleDefaultConfig

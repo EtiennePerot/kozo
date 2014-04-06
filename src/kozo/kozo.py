@@ -7,8 +7,16 @@ class KozoStopError(KozoError):
 from .confsys import *
 
 class Role(Configurable):
-	def __init__(self, name, providedConfig):
-		Configurable.__init__(self, 'Role<' + name + '>', providedConfig, self.__class__._roleConfig, self.__class__._roleConfigRequired)
+	def __init__(self, name, nodeName, providedConfig):
+		roleConfig = self.__class__._roleConfig.copy()
+		for key, default in self.__class__._roleConfig.iteritems():
+			if default is NODE_NAME:
+				roleConfig[key] = nodeName
+			elif default is ROLE_NAME:
+				roleConfig[key] = name
+			elif default is ROLENODE_NAME:
+				roleConfig[key] = '%s@%s' % (name, nodeName)
+		Configurable.__init__(self, 'Role<' + name + '>', providedConfig, roleConfig, self.__class__._roleConfigRequired)
 		self._name = name
 		self._node = None
 		self._controllingThread = None
@@ -74,6 +82,10 @@ class Role(Configurable):
 	def kill(self):
 		if self._controllingThread is not None:
 			self._controllingThread.kill()
+	def __hash__(self):
+		return hash((self._node, self._name))
+	def __eq__(self, other):
+		return isinstance(other, Role) and other._node == self._node and other._name == self._name
 
 class Transport(Configurable):
 	Priority_BEST = 4
@@ -81,8 +93,16 @@ class Transport(Configurable):
 	Priority_MEH = 2
 	Priority_BAD = 1
 	Priority_WORST = 0
-	def __init__(self, name, providedConfig):
-		Configurable.__init__(self, 'Transport<' + name + '>', providedConfig, self.__class__._transportConfig, self.__class__._transportConfigRequired)
+	def __init__(self, name, nodeName, providedConfig):
+		transportConfig = self.__class__._transportConfig.copy()
+		for key, default in self.__class__._transportConfig.iteritems():
+			if default is NODE_NAME:
+				transportConfig[key] = nodeName
+			elif default is TRANSPORT_NAME:
+				transportConfig[key] = name
+			elif default is TRANSPORTNODE_NAME:
+				transportConfig[key] = '%s@%s' % (name, nodeName)
+		Configurable.__init__(self, 'Transport<' + name + '>', providedConfig, transportConfig, self.__class__._transportConfigRequired)
 		self._name = name
 		self._node = None
 	def getNode(self):
@@ -105,6 +125,10 @@ class Transport(Configurable):
 		raise NotImplementedError()
 	def __str__(self):
 		return self.__class__.__name__ + '<' + self._node.getName() + ':' + self._name + '>'
+	def __hash__(self):
+		return hash((self._node, self._name))
+	def __eq__(self, other):
+		return isinstance(other, Transport) and other._node == self._node and other._name == self._name
 
 class Channel(object):
 	def __init__(self, fromNode, toNode):
@@ -250,13 +274,13 @@ def kozo(config, selfNode): # System entry point
 				roleClass = kozoRole(roleName, roleName, nodeName)
 			if 'description' in roleConf:
 				del roleConf['description']
-			node.addRole(roleClass(roleName, roleConf))
+			node.addRole(roleClass(roleName, nodeName, roleConf))
 		for transportName, transportConf in nodeConf['transports'].items():
 			if 'type' in transportConf:
 				transportClass = kozoTransport(transportConf['type'], transportName, nodeName)
 			else:
 				transportClass = kozoTransport(transportName, transportName, nodeName)
-			node.addTransport(transportClass(transportName, transportConf))
+			node.addTransport(transportClass(transportName, nodeName, transportConf))
 	kozoSystem()._setSelfNode(selfNode)
 	info('Kozo system defined. Starting runtime.')
 	kozoSystem().run()

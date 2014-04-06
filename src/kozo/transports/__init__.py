@@ -41,14 +41,7 @@ def kozoTransport(transport, transportName, nodeName):
 	transportConfigRequired = []
 	for key in transportData.transportInfo['config']:
 		if 'default' in transportData.transportInfo['config'][key]:
-			default = transportData.transportInfo['config'][key]['default']
-			if default is NODE_NAME:
-				default = nodeName
-			elif default is TRANSPORT_NAME:
-				default = transportName
-			elif default is TRANSPORTNODE_NAME:
-				default = '%s@%s' % (transportName, nodeName)
-			transportDefaultConfig[key] = default
+			transportDefaultConfig[key] = transportData.transportInfo['config'][key]['default']
 		else:
 			transportConfigRequired.append(key)
 	transportClass._transportConfig = transportDefaultConfig
