@@ -32,6 +32,7 @@ system:
                                 description: Main logger for the system.
                                 file: testnets/localnet/testnet.log
                                 clearLog: true
+                                nodeRestrict: "*"
                 transports:
                         tcp:
                                 address: localhost
