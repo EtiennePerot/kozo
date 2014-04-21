@@ -100,6 +100,7 @@ class _Message(object):
 			'sender': kozoSystem().getSelfNode().getName(),
 			'data': data
 		}
+		self._size = None
 	def getRecipientNodes(self):
 		return kozoSystem().getNodes()
 	def toBytes(self):
@@ -109,6 +110,12 @@ class _Message(object):
 			if serialized is not None:
 				return struct.pack('I', i) + serialized
 		return None
+	def getSize(self):
+		if self._size is None:
+			toBytes = self.toBytes()
+			if toBytes is not None:
+				self._size = len(toBytes)
+		return self._size
 	def getType(self):
 		return self._content['type']
 	def getTimestamp(self):

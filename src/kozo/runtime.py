@@ -161,13 +161,13 @@ class ReceptionThread(KozoThread):
 class RoleThread(KozoThread):
 	def __init__(self, role):
 		self._role = role
-		self._incomingMessagesQueue = RollingQueue(self._role.getMessageQueueSize())
+		self._incomingMessagesQueue = RollingQueue(self._role.getMessageQueueLength(), self._role.getMessageQueueSize())
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
 		self._dead = threading.Event()
 		self._role.setControllingThread(self)
 		self._role.localInit()
 	def deliver(self, message):
-		self._incomingMessagesQueue.push(message)
+		self._incomingMessagesQueue.push(message, message.getSize())
 	def sendMessage(self, message):
 		kozoRuntime().sendMessage(message)
 	def sleep(self, seconds):
@@ -215,11 +215,11 @@ class ConnectionThread(KozoThread):
 	def __init__(self, node):
 		self._node = node
 		self._channel = None
-		self._outgoingMessagesQueue = RollingQueue(kozoConfig('outgoingQueueSize'))
+		self._outgoingMessagesQueue = RollingQueue(kozoConfig('outgoingQueueLength'), kozoConfig('outgoingQueueSize'))
 		KozoThread.__init__(self, name='Connection to ' + str(self._node))
 		self.daemon = True
 	def sendMessage(self, message):
-		self._outgoingMessagesQueue.push(message)
+		self._outgoingMessagesQueue.push(message, message.getSize())
 	def _sendBytes(self, bytes):
 		while len(bytes):
 			sentBytes = self._channel.wrapSend(bytes)

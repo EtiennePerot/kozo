@@ -32,9 +32,13 @@ def rpio():
 class RollingQueue(object):
 	"""
 	A thread-safe, interruptible FIFO queue where pushing elements when full causes the oldest elements to be dropped.
+	Limits by both maximum length (number of elements) and maximum size (memory used by elements).
+	Note that the queue will still accept one larger than the maximum size, in which case all other elements will be dropped from the queue.
 	"""
-	def __init__(self, maxLength=None):
-		self._maxLength = maxLength
+	def __init__(self, maxLength=None, maxSize=None):
+		self._maxLength = None if maxLength is None else max(1, maxLength)
+		self._maxSize = None if maxSize is None else max(1, maxSize)
+		self._currentSize = 0
 		self._deque = collections.deque(maxlen=self._maxLength)
 		self._condition = threading.Condition()
 		self._interrupted = False
@@ -45,13 +49,23 @@ class RollingQueue(object):
 	def __len__(self):
 		with self._condition:
 			return len(self._deque)
+	def size(self):
+		with self._condition:
+			return self._currentSize
 	def interrupt(self):
 		with self._condition:
 			self._interrupted = True
 			self._condition.notifyAll()
-	def push(self, item):
+	def push(self, item, itemSize=0):
+		if itemSize is None:
+			itemSize = 0
 		with self._condition:
-			self._deque.appendleft(item)
+			self._currentSize += itemSize
+			while ((self._maxSize is not None and self._currentSize > self._maxSize) or
+			       (self._maxLength is not None and len(self._deque) >= self._maxLength)):
+				_, size = self._deque.pop()
+				self._currentSize -= size
+			self._deque.appendleft((item, itemSize))
 			self._condition.notifyAll()
 	def pop(self, blocking=True, timeout=None):
 		with self._condition:
@@ -59,4 +73,6 @@ class RollingQueue(object):
 				if not blocking or self._interrupted:
 					return None
 				self._condition.wait(timeout)
-			return self._deque.pop()
+			element, size = self._deque.pop()
+			self._currentSize -= size
+			return element

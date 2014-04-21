@@ -37,10 +37,14 @@ class Role(Configurable):
 	def sleep(self, seconds):
 		if self._controllingThread is not None:
 			self._controllingThread.sleep(seconds)
+	def getMessageQueueLength(self):
+		if self['messageQueueLength'] is not None:
+			return self['messageQueueLength']
+		return 8
 	def getMessageQueueSize(self):
 		if self['messageQueueSize'] is not None:
 			return self['messageQueueSize']
-		return 8
+		return 4 * 1024 * 1024 # 4 megabytes
 	def getMessage(self, timeout=None):
 		"""Get a message from our queue.
 
@@ -244,7 +248,8 @@ _kozoConfig = None
 _kozoConfigDefault = {
 	'heartbeat': 10,
 	'connectionRetry': 60,
-	'outgoingQueueSize': 128,
+	'outgoingQueueLength': 128,
+	'outgoingQueueSize': 4 * 1024 * 1024, # 4 megabytes
 	'cipher': 'aes256-ctr',
 	'hmac': 'hmac-sha1',
 	'rolePath': '',
