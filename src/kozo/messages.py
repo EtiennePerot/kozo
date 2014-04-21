@@ -1,18 +1,52 @@
+import struct
 import time
 import itertools
 from kozo import kozoSystem
 from .log import *
 
+_serializers = []
+
+class _Serializer(object):
+	def pack(self, data):
+		raise NotImplementedError()
+	def unpack(self, data):
+		raise NotImplementedError()
+
+class _NullSerializer(_Serializer):
+	def pack(self, data):
+		return None
+	def unpack(self, data):
+		return None
+
 try:
 	import msgpack as _msgpack
-	_pack = _msgpack.packb
-	_unpack = lambda x: _msgpack.unpackb(x, use_list=False)
-	info('Using msgpack as serializer. Make sure this is the case for all other nodes.')
+	class _MsgpackSerializer(_Serializer):
+		def pack(self, data):
+			if len(repr(data)) > 32768:
+				return None
+			return _msgpack.packb(data)
+		def unpack(self, data):
+			return _msgpack.unpackb(data, use_list=False)
+	_serializers.append(_MsgpackSerializer())
 except ImportError:
-	import cPickle
-	_pack = cPickle.dumps
-	_unpack = cPickle.loads
-	info('Using cPickle as serializer. Make sure this is the case for all other nodes.')
+	warn('Cannot import msgpack. msgpack serializer will not be available.')
+	_serializers.append(_NullSerializer())
+
+import cPickle as _cPickle
+class _CPickleSerializer(_Serializer):
+	def pack(self, data):
+		return _cPickle.dumps(data)
+	def unpack(self, data):
+		return _cPickle.loads(data)
+_serializers.append(_CPickleSerializer())
+
+import pickle as _pickle
+class _PickleSerializer(_Serializer):
+	def pack(self, data):
+		return _pickle.dumps(data)
+	def unpack(self, data):
+		return _pickle.loads(data)
+_serializers.append(_PickleSerializer())
 
 _definedMessageClasses = {}
 class _MessageMetaclass(type):
@@ -31,7 +65,17 @@ class _MessageMetaclass(type):
 		return builtClass
 
 def decodeMessage(bytes):
-	payload = _unpack(bytes)
+	indexBytes = struct.calcsize('I')
+	serializerIndex = struct.unpack('I', bytes[:indexBytes])[0]
+	try:
+		serializer = _serializers[serializerIndex]
+	except IndexError:
+		warn('Received payload with unknown serializer index:', serializerIndex)
+		return None
+	payload = serializer.unpack(bytes[indexBytes:])
+	if payload is None:
+		warn('Cannot deserialize payload with serializer', serializer, ':', repr(bytes[indexBytes:]))
+		return None
 	if type(payload) is not type(()):
 		warn('Received non-tuple payload:', type(payload))
 		return None
@@ -59,7 +103,12 @@ class _Message(object):
 	def getRecipientNodes(self):
 		return kozoSystem().getNodes()
 	def toBytes(self):
-		return _pack((self.__class__.__name__, self._content))
+		message = (self.__class__.__name__, self._content)
+		for i, serializer in enumerate(_serializers):
+			serialized = serializer.pack(message)
+			if serialized is not None:
+				return struct.pack('I', i) + serialized
+		return None
 	def getType(self):
 		return self._content['type']
 	def getTimestamp(self):

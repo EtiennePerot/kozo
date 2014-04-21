@@ -34,7 +34,7 @@ This design decision reflects the intended purpose of Kōzō's Messages: Event n
 * [Python-six]
 
 ### Optional dependencies
-* [MessagePack] - Used as serializer if available; otherwise, [cPickle] is used. Be careful: either **all** nodes must have it, either **none** of the nodes can have it.
+* [MessagePack] - Used as serializer if available; otherwise, [cPickle] or [pickle] is used. Be careful: if a node doesn't have it, it will not be able to deserialize messages from nodes that do have it.
 
 ### Testnet dependencies
 * [tmuxinator], which itself depends on:
@@ -292,6 +292,7 @@ system:
 [Python-six]: https://pythonhosted.org/six/
 [MessagePack]: http://msgpack.org/
 [cPickle]: http://docs.python.org/2/library/pickle.html#module-cPickle
+[pickle]: http://docs.python.org/2/library/pickle.html
 [tmuxinator]: https://github.com/aziz/tmuxinator
 [Ruby]: http://www.ruby-lang.org/
 [tmux]: http://tmux.sourceforge.net/

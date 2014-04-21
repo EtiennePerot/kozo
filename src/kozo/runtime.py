@@ -8,6 +8,8 @@ from .messages import *
 from .log import *
 from .helpers import randomWait, RollingQueue
 
+_messageMagicHeader = 'KOZOMSG'
+
 class KozoRuntime(object):
 	def __init__(self):
 		self._lock = threading.RLock()
@@ -135,16 +137,20 @@ class ReceptionThread(KozoThread):
 	def execute(self):
 		while self._channel.isAlive():
 			try:
-				lengthBytes = self._receiveBytes(struct.calcsize('I'), kozoConfig('connectionRetry'))
+				lengthBytes = self._receiveBytes(len(_messageMagicHeader) + struct.calcsize('I'), kozoConfig('connectionRetry'))
 				if lengthBytes:
-					length = struct.unpack('I', lengthBytes)[0]
-					messageBytes = self._receiveBytes(length, kozoConfig('connectionRetry'))
-					if messageBytes:
-						message = decodeMessage(messageBytes)
-						kozoRuntime().handOffIncomingMessage(message)
-					else:
-						infoRuntime(self, 'Channel timeout while trying to read message of expected size', messageBytes)
+					if lengthBytes[:len(_messageMagicHeader)] != _messageMagicHeader:
+						infoRuntime(self, 'Message did not have valid header:', repr(lengthBytes[:len(_messageMagicHeader)]))
 						self.kill()
+					else:
+						length = struct.unpack('I', lengthBytes[len(_messageMagicHeader):])[0]
+						messageBytes = self._receiveBytes(length, kozoConfig('connectionRetry'))
+						if messageBytes:
+							message = decodeMessage(messageBytes)
+							kozoRuntime().handOffIncomingMessage(message)
+						else:
+							infoRuntime(self, 'Channel timeout while trying to read message of expected size', messageBytes)
+							self.kill()
 				else:
 					infoRuntime(self, 'Channel timeout while trying to read message size.')
 					self.kill()
@@ -251,7 +257,10 @@ class ConnectionThread(KozoThread):
 					toDeliver = self._outgoingMessagesQueue.pop(True, kozoConfig('connectionRetry'))
 					if toDeliver is not None:
 						messageBytes = toDeliver.toBytes()
-						if self._sendBytes(struct.pack('I', len(messageBytes)) + messageBytes) == 0:
+						if messageBytes is None:
+							infoRuntime(self, 'Could not serialize message; killing connection.')
+							self.kill()
+						elif self._sendBytes(_messageMagicHeader + struct.pack('I', len(messageBytes)) + messageBytes) == 0:
 							infoRuntime(self, 'Could not send message; assuming connection is dead.')
 							self.kill()
 					else:
