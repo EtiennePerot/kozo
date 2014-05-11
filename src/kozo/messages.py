@@ -1,7 +1,7 @@
 import struct
 import time
 import itertools
-from kozo import kozoSystem
+from kozo import kozoSystem, Node
 from .log import *
 
 _serializers = []
@@ -56,6 +56,7 @@ class _MessageMetaclass(type):
 		def newInit(self, *args, **kwargs):
 			if '_kozoMessage_payload' in kwargs:
 				self._content = kwargs['_kozoMessage_payload']
+				self._size = None
 			else:
 				builtClass._kozoMessage_init(self, *args, **kwargs)
 		builtClass.__init__ = newInit
@@ -126,10 +127,11 @@ class _Message(object):
 		return self._content['data']
 
 class Heartbeat(_Message):
-	def __init__(self):
+	def __init__(self, toNode):
 		_Message.__init__(self, 'heartbeat', None)
+		self._toNode = toNode
 	def getRecipientNodes(self):
-		return kozoSystem().getNodesBy(lambda n: not n.isSelf())
+		return [self._toNode]
 
 class RoleMessage(_Message):
 	def __init__(self, fromRole, type, channel=None, data={}):

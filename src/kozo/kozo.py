@@ -119,6 +119,8 @@ class Transport(Configurable):
 		return Transport.Priority_MEH
 	def init(self):
 		pass
+	def localInit(self):
+		pass
 	def bind(self):
 		pass
 	def accept(self):
@@ -161,8 +163,15 @@ class Channel(object):
 		return 'Channel<' + self._fromNode.getName() + ' to ' + self._toNode.getName() + '>'
 
 class Node(Configurable):
+	CONNECTPOLICY_CONSTANT = 'constant'
+	CONNECTPOLICY_ONDEMAND = 'ondemand'
+	CONNECTPOLICY_NEVER = 'never'
+	CONNECTPOLICIES = (CONNECTPOLICY_CONSTANT, CONNECTPOLICY_ONDEMAND, CONNECTPOLICY_NEVER)
 	def __init__(self, name, providedConfig):
-		Configurable.__init__(self, 'Node<' + name + '>', providedConfig, {}, ['publicKey', 'privateKey', 'roles', 'transports'])
+		Configurable.__init__(self, 'Node<' + name + '>', providedConfig, {
+			'selfToOthersConnectPolicy': self.CONNECTPOLICY_CONSTANT,
+			'othersToSelfConnectPolicy': self.CONNECTPOLICY_CONSTANT,
+		}, ['publicKey', 'privateKey', 'roles', 'transports'])
 		self._name = name
 		self._roles = []
 		self._transports = []
@@ -170,6 +179,12 @@ class Node(Configurable):
 		if len(self._publicKey) < 2:
 			raise KozoError('Invalid public key on node', self.getName())
 		self._privateKeyPath = self['privateKey']
+		self._selfToOthersConnectPolicy = self['selfToOthersConnectPolicy']
+		if self._selfToOthersConnectPolicy not in self.CONNECTPOLICIES:
+			raise KozoError('Invalid selfToOthersConnectPolicy on node', self.getName())
+		self._othersToSelfConnectPolicy = self['othersToSelfConnectPolicy']
+		if self._othersToSelfConnectPolicy not in self.CONNECTPOLICIES:
+			raise KozoError('Invalid othersToSelfConnectPolicy on node', self.getName())
 		kozoSystem().addNode(self)
 	def getName(self):
 		return self._name
@@ -189,6 +204,10 @@ class Node(Configurable):
 		return self._publicKey
 	def getPrivateKeyPath(self):
 		return self._privateKeyPath
+	def getSelfToOthersConnectPolicy(self):
+		return self._selfToOthersConnectPolicy
+	def getOthersToSelfConnectPolicy(self):
+		return self._othersToSelfConnectPolicy
 	def addTransport(self, transport):
 		transport._setNode(self)
 		self._transports.append(transport)

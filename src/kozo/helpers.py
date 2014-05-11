@@ -67,12 +67,24 @@ class RollingQueue(object):
 				self._currentSize -= size
 			self._deque.appendleft((item, itemSize))
 			self._condition.notifyAll()
-	def pop(self, blocking=True, timeout=None):
+	def popWithSize(self, blocking=True, timeout=None):
 		with self._condition:
 			while not len(self._deque):
 				if not blocking or self._interrupted:
-					return None
+					return None, None
 				self._condition.wait(timeout)
 			element, size = self._deque.pop()
 			self._currentSize -= size
-			return element
+			return element, size
+	def pop(self, blocking=True, timeout=None):
+		return self.popWithSize(blocking, timeout)[0]
+	def purge(self, predicate):
+		"""Purge all elements from the queue that don't match the given predicate."""
+		with self._condition:
+			elements = []
+			while not self.isEmpty():
+				element, size = self.popWithSize()
+				if predicate(element):
+					elements.append((element, size))
+			for element, size in elements:
+				self.push(element, size)

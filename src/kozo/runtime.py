@@ -3,7 +3,7 @@ import random
 import struct
 import threading
 import time
-from .kozo import kozoSystem, kozoRuntime, kozoConfig, KozoStopError
+from .kozo import kozoSystem, kozoRuntime, kozoConfig, KozoStopError, Node
 from .messages import *
 from .log import *
 from .helpers import randomWait, RollingQueue
@@ -17,9 +17,8 @@ class KozoRuntime(object):
 		self._roleThreads = {}
 		self._connectionThreads = {}
 		self._incomingChannelThreads = {}
-		self._heartbeatThread = None
 	def _allThreads(self, key=lambda x: True):
-		allThreads = self._transportThreads + self._roleThreads.values() + self._connectionThreads.values() + self._incomingChannelThreads.values() + [self._heartbeatThread]
+		allThreads = self._transportThreads + self._roleThreads.values() + self._connectionThreads.values() + self._incomingChannelThreads.values()
 		return filter(key, allThreads)
 	def _allActiveThreads(self):
 		return self._allThreads(key=lambda x: not x.daemon)
@@ -29,14 +28,19 @@ class KozoRuntime(object):
 				transport.init()
 			for role in node.getRoles():
 				role.init()
-			if node.isSelf():
-				for transport in node.getTransports():
-					self._transportThreads.append(TransportThread(transport))
-				for role in node.getRoles():
-					self._roleThreads[role] = RoleThread(role)
-			else:
+		selfNode = kozoSystem().getSelfNode()
+		tryOutgoingConnections = selfNode.getSelfToOthersConnectPolicy() != Node.CONNECTPOLICY_NEVER
+		listenIncomingConnections = selfNode.getOthersToSelfConnectPolicy() != Node.CONNECTPOLICY_NEVER
+		for transport in selfNode.getTransports():
+			transport.localInit()
+			if listenIncomingConnections:
+				self._transportThreads.append(TransportThread(transport))
+		for role in selfNode.getRoles():
+			role.localInit()
+			self._roleThreads[role] = RoleThread(role)
+		for node in kozoSystem().getNodes():
+			if not node.isSelf() and tryOutgoingConnections and node.getOthersToSelfConnectPolicy() != Node.CONNECTPOLICY_NEVER:
 				self._connectionThreads[node] = ConnectionThread(node)
-		self._heartbeatThread = HeartbeatThread()
 		for thread in self._allThreads():
 			thread.start()
 	def isAlive(self):
@@ -76,8 +80,10 @@ class KozoRuntime(object):
 		for node in message.getRecipientNodes():
 			if node.isSelf():
 				self.handOffIncomingMessage(message)
-			else:
+			elif node in self._connectionThreads:
 				self._connectionThreads[node].sendMessage(message)
+			else:
+				warn('Tried to send a message to', node, 'but no connection thread for it exists; likely a connection policy issue.')
 
 class KozoThread(threading.Thread):
 	_threadNumber = itertools.count() # Atomic
@@ -85,6 +91,25 @@ class KozoThread(threading.Thread):
 		threading.Thread.__init__(self, *args, **kwargs)
 		self._threadId = KozoThread._threadNumber.next()
 		self.name = str(self._threadId) + '#' + self.name
+	def getSubthreads(self):
+		return []
+	def start(self):
+		threading.Thread.start(self)
+		for subthread in self.getSubthreads():
+			subthread.start()
+	def kill(self):
+		for subthread in self.getSubthreads():
+			subthread.kill()
+	def join(self, timeout=None):
+		for subthread in self.getSubthreads():
+			subthread.join(timeout)
+		threading.Thread.join(self, timeout)
+	def isAlive(self):
+		for subthread in self.getSubthreads():
+			if subthread.isAlive():
+				return True
+		return threading.Thread.isAlive(self)
+	is_aliv = isAlive
 	def run(self):
 		try:
 			infoRuntime(self, 'Running')
@@ -92,15 +117,6 @@ class KozoThread(threading.Thread):
 			infoRuntime(self, 'Stopped')
 		except BaseException as e:
 			warnRuntime(self, 'Stopped with exception', e)
-
-class HeartbeatThread(KozoThread):
-	def __init__(self):
-		KozoThread.__init__(self, name='Heartbeat thread')
-		self.daemon = True
-	def execute(self):
-		while True:
-			time.sleep(kozoConfig('heartbeat'))
-			kozoRuntime().sendMessage(Heartbeat())
 
 class TransportThread(KozoThread):
 	def __init__(self, transport):
@@ -123,6 +139,7 @@ class ReceptionThread(KozoThread):
 		KozoThread.__init__(self, name='Reception for ' + str(self._channel))
 		self.daemon = True
 	def kill(self):
+		KozoThread.kill(self)
 		self._channel.kill()
 		infoRuntime(self, 'Killed')
 	def _receiveBytes(self, bytes, timeout):
@@ -152,7 +169,7 @@ class ReceptionThread(KozoThread):
 							infoRuntime(self, 'Channel timeout while trying to read message of expected size', messageBytes)
 							self.kill()
 				else:
-					infoRuntime(self, 'Channel timeout while trying to read message size.')
+					infoRuntime(self, 'Channel timeout while trying to read message.')
 					self.kill()
 			except BaseException as e:
 				warnRuntime(self, 'Failed to receive message', e)
@@ -165,7 +182,6 @@ class RoleThread(KozoThread):
 		KozoThread.__init__(self, name='Role for ' + str(self._role))
 		self._dead = threading.Event()
 		self._role.setControllingThread(self)
-		self._role.localInit()
 	def deliver(self, message):
 		self._incomingMessagesQueue.push(message, message.getSize())
 	def sendMessage(self, message):
@@ -175,6 +191,7 @@ class RoleThread(KozoThread):
 		if isDead:
 			raise KozoStopError()
 	def kill(self):
+		KozoThread.kill(self)
 		self._dead.set()
 		self._incomingMessagesQueue.interrupt()
 	def getMessage(self, timeout=None):
@@ -211,13 +228,49 @@ class RoleThread(KozoThread):
 		except KozoStopError:
 			pass
 
+class HeartbeatThread(KozoThread):
+	def __init__(self, connectionThread, toNode):
+		self._connectionThread = connectionThread
+		self._toNode = toNode
+		KozoThread.__init__(self, name='Heartbeat to ' + str(self._toNode))
+		self.daemon = True
+	def execute(self):
+		randomWait(kozoConfig('heartbeat'))
+		while True:
+			time.sleep(kozoConfig('heartbeat'))
+			if self._connectionThread.shouldSendHeartbeat():
+				kozoRuntime().sendMessage(Heartbeat(self._toNode))
+
 class ConnectionThread(KozoThread):
 	def __init__(self, node):
 		self._node = node
 		self._channel = None
 		self._outgoingMessagesQueue = RollingQueue(kozoConfig('outgoingQueueLength'), kozoConfig('outgoingQueueSize'))
+		self._heartbeatThread = HeartbeatThread(self, self._node)
 		KozoThread.__init__(self, name='Connection to ' + str(self._node))
 		self.daemon = True
+	def getSubthreads(self):
+		return [self._heartbeatThread]
+	def _shouldConnect(self):
+		selfToRemote = kozoSystem().getSelfNode().getSelfToOthersConnectPolicy()
+		remoteToSelf = self._node.getOthersToSelfConnectPolicy()
+		return (
+			remoteToSelf != Node.CONNECTPOLICY_NEVER
+		) and (
+			selfToRemote != Node.CONNECTPOLICY_NEVER
+		) and (
+			(
+				(
+					remoteToSelf == Node.CONNECTPOLICY_CONSTANT
+				) and (
+					selfToRemote == Node.CONNECTPOLICY_CONSTANT
+				)
+			) or (
+				not self._outgoingMessagesQueue.isEmpty()
+			)
+		)
+	def shouldSendHeartbeat(self):
+		return self._channel is not None or self._shouldConnect()
 	def sendMessage(self, message):
 		self._outgoingMessagesQueue.push(message, message.getSize())
 	def _sendBytes(self, bytes):
@@ -227,18 +280,20 @@ class ConnectionThread(KozoThread):
 				return 0
 			bytes = bytes[sentBytes:]
 	def kill(self):
+		KozoThread.kill(self)
 		try:
 			self._channel.kill()
 		except:
 			pass
 		self._channel = None
+		self._outgoingMessagesQueue.purge(lambda m: not isinstance(m, Heartbeat))
 		infoRuntime(self, 'Killed')
 	def execute(self):
 		randomWait(kozoConfig('connectionRetry'))
+		originNode = kozoSystem().getSelfNode()
+		targetNode = self._node
 		while True:
-			if self._channel is None or not self._channel.isAlive():
-				originNode = kozoSystem().getSelfNode()
-				targetNode = self._node
+			if self._shouldConnect() and (self._channel is None or not self._channel.isAlive()):
 				for originTransport in sorted(originNode.getTransports(), key=lambda t: t.getPriority(), reverse=True):
 					for targetTransport in sorted(targetNode.getTransports(), key=lambda t: t.getPriority(), reverse=True):
 						if originTransport.canConnect(targetTransport):

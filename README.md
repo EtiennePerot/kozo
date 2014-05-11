@@ -21,7 +21,7 @@ A Kōzō system is made of many *Nodes*, each of which have many *Roles* which c
 
 All Transports feature reliability, integrity, encryption, and authentication. However, Kōzō has no notion of group consensus and doesn't guarantee that all messages will be delivered to all available interested parties. It will simply try its best to ensure that this is the case as often as possible, nothing more.
 
-To do this, every Node `A` keeps trying to reach every other Node `B` using any possible {`A`-Transport, `B`-Transport} pair. Once a connection is made, Messages sent by Roles running on `A` will reach interested Roles running on `B`. When the connection drops, Messages sent by Roles running on `A` will not reach interested Roles running on `B`. Once the link is reestablished, Messages can flow from `A` to `B` again.
+To do this, every Node `A` constantly tries to reach every other Node `B` (unless `A`'s or `B`'s connection policies specify otherwise), using any compatible {`A`-Transport, `B`-Transport} pair. Once a connection is made, Messages sent by Roles running on `A` will reach interested Roles running on `B`. When the connection drops, Messages sent by Roles running on `A` will not reach interested Roles running on `B`. Once the link is reestablished, Messages can flow from `A` to `B` again.
 
 This design decision reflects the intended purpose of Kōzō's Messages: Event notifications. As working on old events should be considered meaningless, cutting a link simply cuts the event flow. The event flow will resume once the link is re-established.
 
@@ -97,6 +97,8 @@ Here is a detailed description of what each block does and accepts as options:
     * Each child of the `system` block is a Node block. Its name determines the Node's name. Each Node block contains Node-specific information.
         * `privateKey` is a (preferrably absolute) path to the private key of the Node. Note that this file should only be valid on the Node in question, i.e. only the Node being described should have such a file. As such, it is entirely possible to have the same `privateKey` value for all Node blocks, as long as each Node has its own private key saved at that location on its filesystem.
         * `publicKey` is the contents of the public half of `privateKey`. Since all Nodes need to know this information, it is provided directly into the configuration file, as opposed to being pointed at by a path.
+        * `selfToOthersConnectPolicy`: Connection policy for connections going from this node to other nodes. See the Connection policies section for more info.
+        * `othersToSelfConnectPolicy`: Connection policy for connections going from other nodes to this node. See the Connection policies section for more info.
         * `roles` is a list of Role blocks.
             * Each child of the `roles` block is a Role block, containing Role-specific information. Its name determines the Role's name. Role names need not be unique across Nodes, but should be unique among a single Node. All Role blocks accept the following configuration options, on top of Role-specific ones:
                 * `type`: *Optional but highly recommended*. If specified, this must refer to the name of the Role module to use. If unspecified, the name of the Role is used as the name of the Role module to use. In the above example, `timer1` is a Role of type `timer`, whereas `cuckoo` is a Role of type `cuckoo`.
@@ -152,6 +154,36 @@ The following Roles are distributed as part of Kōzō:
     * `address` (Optional): The MAC address of the Bluetooth interface of the Node. If specified, other Nodes will know instantly which Bluetooth device to connect to, which makes the connection process a lot faster. If unspecified, other Nodes will need to poke every Bluetooth device in range and ask for their list of services, until they find one with a matching UUID. This approach takes a lot longer, but it allows you to make the Node spoof its MAC address every so often without adverse consequences. Once the Bluetooth connection is established, the performance is the same whether or not the MAC address was specified.
     * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
 
+#### Connection policies
+
+Nodes can set their `othersToSelfConnectPolicy` and `selfToOthersConnectPolicy` settings to configure when a connection should be attempted between them. Possible values are `constant`, `ondemand`, and `never`.
+
+The decision tree is as follows, where node `Alice` is determining whether or not it should have a connection open to Node `Bob`:
+
+* `Alice.selfToOthersConnectPolicy` = `constant`
+    * `Bob.othersToSelfConnectPolicy` = `constant`:  
+      The connection is kept alive at all times.
+    * `Bob.othersToSelfConnectPolicy` = `ondemand`:  
+      The connection is initiated when `Alice` attempts to send a message to `Bob`. If the connection dies, it will not be re-established until `Alice` next attempts to send a message to `Bob`.
+    * `Bob.othersToSelfConnectPolicy` = `never`:  
+      No connection is established. If `Alice` attempts to send a message to `Bob`, it will never make it.
+* `Alice.selfToOthersConnectPolicy` = `ondemand`:
+    * `Bob.othersToSelfConnectPolicy` = `constant`:  
+      The connection is initiated when `Alice` attempts to send a message to `Bob`. If the connection dies, it will not be re-established until `Alice` next attempts to send a message to `Bob`.
+    * `Bob.othersToSelfConnectPolicy` = `ondemand`:  
+      The connection is initiated when `Alice` attempts to send a message to `Bob`. If the connection dies, it will not be re-established until `Alice` next attempts to send a message to `Bob`.
+    * `Bob.othersToSelfConnectPolicy` = `never`:  
+      No connection is established. If `Alice` attempts to send a message to `Bob`, it will never make it.
+* `Alice.selfToOthersConnectPolicy` = `never`:  
+    * `Bob.othersToSelfConnectPolicy` = `constant`:  
+      No connection is established. If `Alice` attempts to send a message to `Bob`, it will never make it.
+    * `Bob.othersToSelfConnectPolicy` = `ondemand`:  
+      No connection is established. If `Alice` attempts to send a message to `Bob`, it will never make it.
+    * `Bob.othersToSelfConnectPolicy` = `never`:  
+      No connection is established. If `Alice` attempts to send a message to `Bob`, it will never make it.
+
+Note that the above tree only applies for the `Alice` → `Bob` connection. The matter of the `Bob` → `Alice` connection is entirely independent (but, of course, follows the same rules).
+
 ### Running the system
 
 Once all of the above is properly declared, copy the configuration file to each Node. Then, run the following:
@@ -190,6 +222,7 @@ An `AuthenticatedTransport` subclass **must** implement the following methods:
 Additionally, an `AuthenticatedTransport` subclass **may** override the following methods:
 
 * `init(self)`: This will be called during initialization on **all Nodes in the system**. As such, no networking should ever happen here, only basic initialization and state-setting. It is better to do such work here rather than in the constructor, because the whole network may not be completely represented at the time the constructor is called. If you override this, you should **always** call the `.init()` method of the parent class as well.
+* `localInit(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.localInit()` method of the parent class as well.
 * `bind(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.bind()` method of the parent class as well.
 * `getPriority(self)`: Returns a priority indicator (from `Transport.Priority_WORST` to `Transport.Priority_BEST`) indicating the preference the system should have regarding the Transport to pick in order to establish a connection from one Node to another. The faster and the more reliable the Transport, the higher its priority should be. The default is `Transport.Priority_MEH`.
 * `canConnect(self, otherTransport)`: This should return `True` if this Transport can be used to connect to `otherTransport`, otherwise `False`. The default implementation returns `True` if both Transports are of the same class, so there is no need to override this method if that is the only check you will be doing.

@@ -38,8 +38,7 @@ class AuthenticatedTransport(Transport):
 		transport.set_keepalive(True)
 		transport.get_security_options().ciphers = (kozoConfig('cipher'),)
 		transport.get_security_options().digests = (kozoConfig('hmac'),)
-	def bind(self):
-		Transport.bind(self)
+	def localInit(self):
 		if self._privateKey is None:
 			self._privateKey = paramiko.RSAKey.from_private_key_file(self.getNode().getPrivateKeyPath())
 	def connect(self, otherTransport):
