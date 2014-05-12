@@ -171,6 +171,7 @@ class Node(Configurable):
 		Configurable.__init__(self, 'Node<' + name + '>', providedConfig, {
 			'selfToOthersConnectPolicy': self.CONNECTPOLICY_CONSTANT,
 			'othersToSelfConnectPolicy': self.CONNECTPOLICY_CONSTANT,
+			'overrideMainConfiguration': {},
 		}, ['publicKey', 'privateKey', 'roles', 'transports'])
 		self._name = name
 		self._roles = []
@@ -292,6 +293,7 @@ def kozo(config, selfNode): # System entry point
 	kozoSystem()._setSelfNode(selfNode)
 	if kozoSystem().getSelfNode() is None:
 		raise KozoError('Unknown node name:', selfNode)
+	_kozoConfig.overrideWith(kozoSystem().getSelfNode()['overrideMainConfiguration'])
 	for nodeName, nodeConf in config['system'].items():
 		node = kozoSystem().getNodeByName(nodeName)
 		for roleName, roleConf in nodeConf['roles'].items():
