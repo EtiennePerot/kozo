@@ -17,7 +17,7 @@ class TCPTransport(AuthenticatedTransport):
 		AuthenticatedTransport.bind(self)
 		self._serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self._serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self._serverSocket.bind(('', self['port']))
+		self._serverSocket.bind((self['bindAddress'], self['port']))
 		self._serverSocket.listen(self['socketConnectionBacklog'])
 	def getUnauthenticatedConnectAddresses(self, otherTransport):
 		return [(address,  otherTransport['port']) for address in otherTransport['address']]
@@ -39,6 +39,10 @@ transportInfo = {
 		'port': {
 			'default': 6020,
 			'description': 'TCP port to bind to.'
+		},
+		'bindAddress': {
+			'default': '',
+			'description': 'Address to bind to. If not specified, listens on all interfaces.'
 		},
 		'socketConnectionBacklog': {
 			'default': 256,
