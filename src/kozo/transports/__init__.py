@@ -37,7 +37,7 @@ def kozoTransport(transport, transportName, nodeName):
 	if transportData.transportInfo['format'] != '1.0':
 		raise KozoError(transport, 'has unsupported transport format', transportData.transportInfo['format'])
 	transportClass = transportData.transportInfo['class']
-	transportDefaultConfig = {}
+	transportDefaultConfig = {'type': transport}
 	transportConfigRequired = []
 	for key in transportData.transportInfo['config']:
 		if 'default' in transportData.transportInfo['config'][key]:

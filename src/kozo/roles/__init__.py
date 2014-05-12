@@ -37,7 +37,7 @@ def kozoRole(role, roleName, nodeName):
 	if roleData.roleInfo['format'] != '1.0':
 		raise KozoError(role, 'has unsupported role format', roleData.roleInfo['format'])
 	roleClass = roleData.roleInfo['class']
-	roleDefaultConfig = {}
+	roleDefaultConfig = {'type': role}
 	roleConfigRequired = []
 	for key in roleData.roleInfo['config']:
 		if 'default' in roleData.roleInfo['config'][key]:
