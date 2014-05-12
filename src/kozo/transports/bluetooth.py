@@ -9,17 +9,20 @@ class BluetoothTransport(AuthenticatedTransport):
 	def init(self):
 		self._serverSocket = None
 		self._uuid = self['uuid'].lower()
+		self._adapter = None
 		self._address = None
 		if self['address'] is not None:
 			self._address = self['address'].upper()
 	def getPriority(self):
 		return BluetoothTransport.Priority_BAD
-	def bind(self):
-		AuthenticatedTransport.bind(self)
+	def localInit(self):
+		AuthenticatedTransport.localInit(self)
 		bus = dbus.SystemBus()
 		manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.bluez.Manager')
-		adapter = dbus.Interface(bus.get_object('org.bluez', manager.DefaultAdapter()), 'org.bluez.Adapter')
-		adapter.SetProperty('Discoverable', self._address is None, signature='sv')
+		self._adapter = dbus.Interface(bus.get_object('org.bluez', manager.DefaultAdapter()), 'org.bluez.Adapter')
+	def bind(self):
+		AuthenticatedTransport.bind(self)
+		self._adapter.SetProperty('Discoverable', self._address is None, signature='sv')
 		self._serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 		self._serverSocket.bind(('', bluetooth.PORT_ANY))
 		self._serverSocket.listen(self['socketConnectionBacklog'])
