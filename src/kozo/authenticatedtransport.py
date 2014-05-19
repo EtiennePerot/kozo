@@ -10,6 +10,15 @@ def _publicKeyCompare(key1, key2):
 		key2 = (key2.get_name(), key2.get_base64())
 	return key1[0] == key2[0] and key1[1] == key2[1]
 
+
+def _initializeParamikoTransport(transport):
+	transport.set_keepalive(True)
+	transport.local_version = 'SSH-2.0-OpenSSH' # Blend in a little
+	transport.banner_timeout = kozoConfig('connectionRetry') * 3
+	transport.clear_to_send_timeout = kozoConfig('connectionRetry') * 5
+	transport.get_security_options().ciphers = (kozoConfig('cipher'),)
+	transport.get_security_options().digests = (kozoConfig('hmac'),)
+
 class _KozoSSHServerInterface(paramiko.ServerInterface):
 	def __init__(self, *args, **kwargs):
 		paramiko.ServerInterface.__init__(self, *args, **kwargs)
@@ -31,19 +40,10 @@ class _KozoSSHServerInterface(paramiko.ServerInterface):
 		return self._key
 
 class AuthenticatedTransport(Transport):
-	def __init__(self, name, config, *args, **kwargs):
-		Transport.__init__(self, name, config, *args, **kwargs)
-		self._privateKey = None
-	def _initializeParamikoTransport(self, transport):
-		transport.set_keepalive(True)
-		transport.get_security_options().ciphers = (kozoConfig('cipher'),)
-		transport.get_security_options().digests = (kozoConfig('hmac'),)
 	def localInit(self):
-		if self._privateKey is None:
-			self._privateKey = paramiko.RSAKey.from_private_key_file(self.getNode().getPrivateKeyPath())
+		self._privateKey = paramiko.RSAKey.from_private_key_file(self.getNode().getPrivateKeyPath())
 	def connect(self, otherTransport):
-		if self._privateKey is None:
-			self._privateKey = paramiko.RSAKey.from_private_key_file(self['privateKey'])
+		assert self._privateKey is not None
 		addresses = self.getUnauthenticatedConnectAddresses(otherTransport)
 		for addressIndex, address in enumerate(addresses):
 			try:
@@ -52,7 +52,7 @@ class AuthenticatedTransport(Transport):
 					infoTransport(self, 'Failed to connect to', address, '(No socket returned)')
 					continue
 				transport = paramiko.Transport(unauthenticatedSocket)
-				self._initializeParamikoTransport(transport)
+				_initializeParamikoTransport(transport)
 				transport.start_client()
 				hostKey = transport.get_remote_server_key()
 				if not _publicKeyCompare(hostKey, otherTransport.getNode().getPublicKey()):
@@ -69,7 +69,7 @@ class AuthenticatedTransport(Transport):
 		if connection is not None:
 			try:
 				transport = paramiko.Transport(connection)
-				self._initializeParamikoTransport(transport)
+				_initializeParamikoTransport(transport)
 				try:
 					transport.load_server_moduli()
 				except:

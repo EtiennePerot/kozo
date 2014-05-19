@@ -6,6 +6,7 @@ from kozo.log import infoTransport
 
 class TCPTransport(AuthenticatedTransport):
 	def init(self):
+		AuthenticatedTransport.init(self)
 		if isinstance(self['address'], six.string_types):
 			self['address'] = [self['address']]
 		if len(self['address']) < 0:
