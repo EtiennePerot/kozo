@@ -113,6 +113,7 @@ Here is a detailed description of what each block does and accepts as options:
 * `connectionRetry`: How long (in seconds) to wait after a disconnection before trying to reconnect again. Default: `60`.
 * `outgoingQueueLength`: The length of the buffer for outgoing Messages (in number of Messages). Each Node holds such a buffer for every other Node in the system. Default: `128`.
 * `outgoingQueueSize`: The size of the buffer for outgoing Messages (in bytes). Each Node holds such a buffer for every other Node in the system. Default: `4 * 1024 * 1024` (4 megabytes).
+* `maxBufferReadSize`: How many bytes to read from a socket at a time. Additionally, the read timeout value is proportional to the number of bytes being read divided by `maxBufferReadSize`. Default: `64 * 1024` (64 kilobytes).
 * `cipher`: The cipher to use for all communication. Default: `aes256-ctr`.
 * `hmac`: The MAC algorithm to use for all communication. Default: `hmac-sha1`.
 * `rolePath`: A colon-separated list of directories in which custom Role files are located. Default: Empty.

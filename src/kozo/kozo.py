@@ -272,6 +272,7 @@ _kozoConfigDefault = {
 	'connectionRetry': 60,
 	'outgoingQueueLength': 128,
 	'outgoingQueueSize': 4 * 1024 * 1024, # 4 megabytes
+	'maxBufferReadSize': 64 * 1024, # 64 kilobytes
 	'cipher': 'aes256-ctr',
 	'hmac': 'hmac-sha1',
 	'rolePath': '',
