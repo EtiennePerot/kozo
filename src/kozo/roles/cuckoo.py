@@ -8,6 +8,8 @@ class Cuckoo(Role):
 		message = self.getMessage()
 		if message is not None:
 			self.info('Received message', message.getEventData(), 'from timer', message.getSenderRole())
+			if self['log']:
+				self.sendLog('Cuckoo received message', message.getEventData())
 
 roleInfo = {
 	'format': '1.0',
@@ -19,6 +21,10 @@ roleInfo = {
 		'timer': {
 			'default': '*',
 			'description': 'Name of the timer to respond to, or "*" to respond to all timers'
+		},
+		'log': {
+			'default': True,
+			'description': 'Log received messages.'
 		}
 	}
 }

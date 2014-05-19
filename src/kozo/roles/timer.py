@@ -8,6 +8,7 @@ class Timer(Role):
 		message = (self['message'], time.strftime('%H:%M:%S'))
 		self.sendEvent('tick', data=message)
 		self.info('Sent message:', message)
+		self.sendLog('Timer sent message:', message)
 
 roleInfo = {
 	'format': '1.0',
@@ -23,6 +24,10 @@ roleInfo = {
 		'message': {
 			'default': 'Ping!',
 			'description': 'Optional message to show in local log at every tick.'
+		},
+		'log': {
+			'default': True,
+			'description': 'Log sent messages.'
 		}
 	}
 }
