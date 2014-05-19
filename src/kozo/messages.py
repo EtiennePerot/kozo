@@ -13,9 +13,13 @@ class _Serializer(object):
 		raise NotImplementedError()
 
 class _NullSerializer(_Serializer):
+	def __init__(self, substitute):
+		self._substitute = substitute
 	def pack(self, data):
+		warn('Cannot pack message:', self._substitute, 'serializer is not available')
 		return None
 	def unpack(self, data):
+		warn('Cannot unpack message:', self._substitute, 'serializer is not available')
 		return None
 
 try:
@@ -30,7 +34,7 @@ try:
 	_serializers.append(_MsgpackSerializer())
 except ImportError:
 	warn('Cannot import msgpack. msgpack serializer will not be available.')
-	_serializers.append(_NullSerializer())
+	_serializers.append(_NullSerializer('msgpack'))
 
 import cPickle as _cPickle
 class _CPickleSerializer(_Serializer):
