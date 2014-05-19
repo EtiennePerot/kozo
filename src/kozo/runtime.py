@@ -33,7 +33,7 @@ class KozoRuntime(object):
 		listenIncomingConnections = selfNode.getOthersToSelfConnectPolicy() != Node.CONNECTPOLICY_NEVER
 		for transport in selfNode.getTransports():
 			transport.localInit()
-			if listenIncomingConnections:
+			if listenIncomingConnections and transport.canAccept():
 				self._transportThreads.append(TransportThread(transport))
 		for role in selfNode.getRoles():
 			role.localInit()
@@ -157,7 +157,7 @@ class ReceptionThread(KozoThread):
 				lengthBytes = self._receiveBytes(len(_messageMagicHeader) + struct.calcsize('I'), kozoConfig('connectionRetry'))
 				if lengthBytes:
 					if lengthBytes[:len(_messageMagicHeader)] != _messageMagicHeader:
-						infoRuntime(self, 'Message did not have valid header:', repr(lengthBytes[:len(_messageMagicHeader)]))
+						warnRuntime(self, 'Message did not have valid header:', repr(lengthBytes[:len(_messageMagicHeader)]), '; killing connection.')
 						self.kill()
 					else:
 						length = struct.unpack('I', lengthBytes[len(_messageMagicHeader):])[0]
@@ -166,7 +166,7 @@ class ReceptionThread(KozoThread):
 							message = decodeMessage(messageBytes)
 							kozoRuntime().handOffIncomingMessage(message)
 						else:
-							infoRuntime(self, 'Channel timeout while trying to read message of expected size', messageBytes)
+							infoRuntime(self, 'Channel timeout while trying to read message of expected size', length)
 							self.kill()
 				else:
 					infoRuntime(self, 'Channel timeout while trying to read message.')

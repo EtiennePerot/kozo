@@ -226,6 +226,7 @@ Additionally, an `AuthenticatedTransport` subclass **may** override the followin
 * `localInit(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.localInit()` method of the parent class as well.
 * `bind(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.bind()` method of the parent class as well.
 * `getPriority(self)`: Returns a priority indicator (from `Transport.Priority_WORST` to `Transport.Priority_BEST`) indicating the preference the system should have regarding the Transport to pick in order to establish a connection from one Node to another. The faster and the more reliable the Transport, the higher its priority should be. The default is `Transport.Priority_MEH`.
+* `canAccept(self)`: This should return `True` if this Transport can be used to receive connections from other Transports.
 * `canConnect(self, otherTransport)`: This should return `True` if this Transport can be used to connect to `otherTransport`, otherwise `False`. The default implementation returns `True` if both Transports are of the same class, so there is no need to override this method if that is the only check you will be doing.
 
 An `AuthenticatedTransport` subclass **should not** override the following methods (but may call them, if appropriate):
@@ -264,9 +265,10 @@ Additionally, a `Transport` subclass **may** override the following methods:
 * `init(self)`: This will be called during initialization on **all Nodes in the system**. As such, no networking should ever happen here, only basic initialization and state-setting. It is better to do such work here rather than in the constructor, because the whole network may not be completely represented at the time the constructor is called. If you override this, you should **always** call the `.init()` method of the parent class as well.
 * `bind(self)`: This will be called during initialization, but **only on the Node the Transport is available on**. If you override this, you should **always** call the `.bind()` method of the parent class as well.
 * `getPriority(self)`: Returns a priority indicator (from `Transport.Priority_WORST` to `Transport.Priority_BEST`) indicating the preference the system should have regarding the Transport to pick in order to establish a connection from one Node to another. The faster and the more reliable the Transport, the higher its priority should be. The default is `Transport.Priority_MEH`.
+* `canAccept(self)`: This should return `True` if this Transport can be used to receive connections from other Transports.
 * `canConnect(self, otherTransport)`: This should return `True` if this Transport can be used to connect to `otherTransport`, otherwise `False`. The default implementation returns `True` if both Transports are of the same class, so there is no need to override this method if that is the only check you will be doing.
 
-An `AuthenticatedTransport` subclass **should not** override the following methods (but may call them, if appropriate):
+A `Transport` subclass **should not** override the following methods (but may call them, if appropriate):
 
 * `getNode(self)`: Returns the Node object that offers this Transport.
 * `isSelf(self)`: Returns whether the Node running the Python interpreter right now is the same as the Node offering this Transport.

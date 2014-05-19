@@ -123,6 +123,8 @@ class Transport(Configurable):
 		pass
 	def bind(self):
 		pass
+	def canAccept(self):
+		return True
 	def accept(self):
 		raise NotImplementedError()
 	def canConnect(self, otherTransport):
