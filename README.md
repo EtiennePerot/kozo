@@ -149,12 +149,20 @@ The following Roles are distributed as part of Kōzō:
 
 * `tcp`: A standard TCP connection. This is the fastest and most reliable Transport.
     * `address`: A comma-separated list of addresses (can be IP addresses, domain names, .onion addresses, local network names, etc) that all point to the Node. These addresses are not used for binding; they are used by other Nodes in order to make a connection.
-    * `port` (Optional): The local TCP port to bind to. The `tcp` Transport will always bind on all interfaces on that port.
+    * `bindAddress` (Optional): The TCP address to bind to. Defaults to the empty string, which means "bind on all interfaces". Can set to `localhost` to bind to the local interface only.
+    * `port` (Optional): The local TCP port to bind to.
     * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
 * `bluetooth`: Communication over Bluetooth. Useful when a device has no Wi-Fi networking capability (or you don't want to give it access to your Wi-Fi network).
     * `uuid`: A random UUID that will identify this service. Can be any valid UUID; you can generate one by running `uuidgen`.
     * `address` (Optional): The MAC address of the Bluetooth interface of the Node. If specified, other Nodes will know instantly which Bluetooth device to connect to, which makes the connection process a lot faster. If unspecified, other Nodes will need to poke every Bluetooth device in range and ask for their list of services, until they find one with a matching UUID. This approach takes a lot longer, but it allows you to make the Node spoof its MAC address every so often without adverse consequences. Once the Bluetooth connection is established, the performance is the same whether or not the MAC address was specified.
     * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
+* `onion`: Communication over Tor through hidden services (`.onion` domain names). Slow, but useful when nodes are far apart, may be behind firewalls, don't need to know where exactly each other node is, and latency doesn't matter. This fits the bill for most logging use cases. This role requires the nodes to be reachable through a `.onion` domain name (for `onion` Transports set to accept incoming connections), and that the system provides transparent `.onion` DNS resolution and proxying (for `onion` Transports set to create outgoing connections).
+  * `incomingOnly` (Optional): If `true`, the Node will not attempt to establish connections to other Nodes' `onion` Transports. It will only listen for incoming connections. This lifts the requirement for having the system perform transparent `.onion` DNS resolution and proxying.
+  * `outgoingOnly` (Optional): If `true`, the Node will not attempt to listen for connections. It will only create connections to other Nodes with `onion` Transports. This lifts the requirement for having the Node being reachable over a `.onion` domain name.
+  * `address`: The `.onion` domain name to be used to reach this Node. Optional if `outgoingOnly` is `true`.
+  * `port` (Optional): The local TCP port to bind to on this Node.
+  * `onionPort` (Optional): The port that other Nodes should use to connect to this Node. This is the virtual hidden service port number set in the Tor configuration. If not set, uses the same value as `port`.
+  * `socketConnectionBacklog` (Optional): The maximum number of incoming connections to keep open but non-processed yet. This should not need to exceed the number of nodes in the network, but it doesn't hurt if it does.
 
 #### Connection policies
 

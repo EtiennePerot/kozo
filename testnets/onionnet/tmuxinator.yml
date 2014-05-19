@@ -1,0 +1,9 @@
+project_name: kozo-onionnet
+windows:
+  - network:
+      layout: main-horizontal
+      panes:
+        - PAGERGOESHERE testnets/onionnet/config.yml
+        - ./kozo testnets/onionnet/config.yml node1
+        - ./kozo testnets/onionnet/config.yml node2
+        - ./kozo testnets/onionnet/config.yml node3
