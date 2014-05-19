@@ -181,6 +181,8 @@ class Node(Configurable):
 		self._publicKey = self['publicKey'].split(' ', 3)
 		if len(self._publicKey) < 2:
 			raise KozoError('Invalid public key on node', self.getName())
+		if self._publicKey[0] != 'ssh-rsa':
+			raise KozoError('Only RSA keys are supported; node', self.getName(), 'has a non-RSA or invalid key.')
 		self._privateKeyPath = self['privateKey']
 		self._selfToOthersConnectPolicy = self['selfToOthersConnectPolicy']
 		if self._selfToOthersConnectPolicy not in self.CONNECTPOLICIES:
