@@ -225,7 +225,7 @@ The `AuthenticatedTransport` class deals with socket-like objects. A socket-like
 
 An `AuthenticatedTransport` subclass **must** implement the following methods:
 
-* `acceptUnauthenticatedConnection(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. Then, the method should return a socket-like object corresponding to the connection that was just made.
+* `acceptUnauthenticatedConnection(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. Then, the method should return a socket-like object corresponding to the connection that was just made. Note that this method may be called multiple times in parallel. Each successful execution of this function should correspond to exactly one connection made.
 * `getUnauthenticatedConnectAddresses(self, otherTransport)`: Should return an iterable of objects (which often just contains one value), each of which should be meaningful as input to the `getUnauthenticatedSocket` method described below, that allows the local Node to connect to the `otherTransport` Node. Each value will be tested in the order of iteration until a connection is made. For example, for the TCP transport, this list simply contains the IP addresses and domain names that `otherTransport`'s Node can be reached at.
 * `getUnauthenticatedSocket(self, otherTransport, addressIndex, address)`: Should attempt to connect to `otherTransport` via the provided `address`, which is just one of the objects returned by `getUnauthenticatedConnectAddresses`, at index `addressIndex` in the iteration. If a connection is successful, this should return a socket-like object. Otherwise, this should return `None`.
 
@@ -266,7 +266,7 @@ The `Transport` class deals with `Channel` instances. It is up to you to build t
 
 Once your `Channel` subclass is properly defined, you can create your `Transport` subclass. A `Transport` subclass **must** implement the following methods:
 
-* `accept(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. It should then perform authentication and set up an encryption key for communication. Then, the method should return a `Channel` object corresponding to the connection that was just made.
+* `accept(self)`: This will be called on the Node offering the Transport once it is ready to accept connections on this Transport. The method should block until a connection is made to this Transport. It should then perform authentication and set up an encryption key for communication. Then, the method should return a `Channel` object corresponding to the connection that was just made. Note that this method may be called multiple times in parallel. Each successful execution of this function should correspond to exactly one connection made.
 * `connect(self, otherTransport)`: Should attempt to connect to `otherTransport`, perform authentication and set up encryption, and then return a `Channel` object on success, or `None` on failure.
 
 Additionally, a `Transport` subclass **may** override the following methods:

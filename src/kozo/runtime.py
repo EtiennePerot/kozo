@@ -34,7 +34,16 @@ class KozoRuntime(object):
 		for transport in selfNode.getTransports():
 			transport.localInit()
 			if listenIncomingConnections and transport.canAccept():
-				self._transportThreads.append(TransportThread(transport))
+				# Estimate the number of accept() threads we may need.
+				numAccepts = 0
+				for node in kozoSystem().getNodes():
+					if not node.isSelf() and node.getSelfToOthersConnectPolicy() != Node.CONNECTPOLICY_NEVER:
+						for remoteTransport in node.getTransports():
+							numAccepts += remoteTransport.canConnect(transport)
+				numAccepts = max(min(numAccepts, len(kozoSystem().getNodes()) // 2), 1)
+				for i in xrange(numAccepts):
+					self._transportThreads.append(TransportThread(transport, i))
+				transport.bind()
 		for role in selfNode.getRoles():
 			role.localInit()
 			self._roleThreads[role] = RoleThread(role)
@@ -119,10 +128,9 @@ class KozoThread(threading.Thread):
 			warnRuntime(self, 'Stopped with exception', e)
 
 class TransportThread(KozoThread):
-	def __init__(self, transport):
+	def __init__(self, transport, index):
 		self._transport = transport
-		self._transport.bind()
-		KozoThread.__init__(self, name='Server for ' + str(self._transport))
+		KozoThread.__init__(self, name='Server ' + str(index) + ' for ' + str(self._transport))
 		self.daemon = True
 	def execute(self):
 		while True:
