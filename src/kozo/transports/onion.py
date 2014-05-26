@@ -100,8 +100,12 @@ class OnionTransport(Transport):
 				client=selfName.encode('utf8'),
 				random=selfRandom
 			)
-			# Sign it.
-			signed = bytes(self._privateKey.sign_ssh_data(Crypto.Random.new(), actualToSign))
+			# Sign it. Some versions of Paramiko take a random pool here, others don't. Try both.
+			try:
+				signedMessage = self._privateKey.sign_ssh_data(Crypto.Random.new(), actualToSign)
+			except TypeError:
+				signedMessage = self._privateKey.sign_ssh_data(actualToSign)
+			signed = bytes(signedMessage)
 			# Send signed response back.
 			sock.sendall(struct.pack('=Qii', selfDate, len(selfRandom), len(signed)) + selfRandom + signed)
 			# Expect acknowledgement.
