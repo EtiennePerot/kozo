@@ -129,6 +129,10 @@ The following Roles are distributed as part of Kōzō:
     * `message` (Optional): A string to insert into every message
 * `cuckoo`: A simple Role that listens for `tick` events (messages sent by the `timer` Role) and prints them.
     * `timer` (Optional): The name of the `timer` Role to listen to. Other `timer` Roles will be ignored. If unspecified, will listen to all `timer` Roles in the system.
+* `message_injector`: A Role useful for debugging. Listens to a TCP port. Any text sent to this port will be interpreted by Python (using `eval`, so don't expose this) and sent inside the network.
+    * `bindAddress` (Optional): The address to bind to. Default: `localhost`.
+    * `bindPort` (Optional): The TCP port number to bind to. Default: 7050.
+    `log` (Optional): Whether or not to log errors and injected messages.
 * `logger`: A Role that listens for `log` events. Roles may send log messages, and the `logger` role will pick them up, print them, and write them to a file. Useful to have a central Node log everything going on in the system.
     * `file` (Optional): Path to a file where the log messages will be written. Default is `/var/log/kozo/kozo.log`
     * `timePrefix` (Optional): Timestamp format used as prefix on each line. See [strftime](http://docs.python.org/2/library/time.html#time.strftime) for the available variables. Default is `[%Y-%m-%d %H:%M:%S] `, with a space at the end so that there is a gap between the timestamp and the message itself.
