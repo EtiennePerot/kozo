@@ -45,6 +45,7 @@ This design decision reflects the intended purpose of Kōzō's Messages: Event n
 ### Specific Role dependencies
 * `roles/bluetooth-discover.py`: [PyBluez]
 * `roles/motion-detect.py`: Either [RPIO] or [RPi.GPIO]
+* `roles/debugger.py`: [Winpdb]
 
 ### Specific Transport dependencies
 * `transports/bluetooth.py`: [PyBluez]
@@ -132,7 +133,13 @@ The following Roles are distributed as part of Kōzō:
 * `message_injector`: A Role useful for debugging. Listens to a TCP port. Any text sent to this port will be interpreted by Python (using `eval`, so don't expose this) and sent inside the network.
     * `bindAddress` (Optional): The address to bind to. Default: `localhost`.
     * `bindPort` (Optional): The TCP port number to bind to. Default: 7050.
-    `log` (Optional): Whether or not to log errors and injected messages.
+    * `log` (Optional): Whether or not to log errors and injected messages.
+* `debugger`: A Role that starts an [rpdb2][Winpdb] session when it receives a `debug` order. Useful for debugging. You can use the `message_injector` role to inject the `debug` order.
+    * `password` (Optional): The debugging session password. Default: `kozo`.
+    * `allowRemote` (Optional): Whether or not to allow debugging from remote machines. Default: True.
+    * `debugTimeout` (Optional): How many seconds to wait until a debugging session is attached before giving up. Default: 600 seconds (10 minutes).
+    * `channel` (Optional): Name of the debug order channel to subscribe to. If not provided, all debug orders will be interpreted as directed to this role.
+    * `log` (Optional): Log debug attempts. Default: True.
 * `logger`: A Role that listens for `log` events. Roles may send log messages, and the `logger` role will pick them up, print them, and write them to a file. Useful to have a central Node log everything going on in the system.
     * `file` (Optional): Path to a file where the log messages will be written. Default is `/var/log/kozo/kozo.log`
     * `timePrefix` (Optional): Timestamp format used as prefix on each line. See [strftime](http://docs.python.org/2/library/time.html#time.strftime) for the available variables. Default is `[%Y-%m-%d %H:%M:%S] `, with a space at the end so that there is a gap between the timestamp and the message itself.
@@ -350,5 +357,6 @@ system:
 [PyBluez]: https://code.google.com/p/pybluez/
 [RPIO]: https://pythonhosted.org/RPIO/
 [RPi.GPIO]: https://code.google.com/p/raspberry-gpio-python/
+[Winpdb]: http://winpdb.org
 [YAML]: http://yaml.org/
 [SSH]: https://en.wikipedia.org/wiki/Secure_Shell
