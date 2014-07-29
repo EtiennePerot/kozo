@@ -5,8 +5,8 @@ system:
                 roles:
                         timer1:
                                 type: timer
-                                description: A simple 30-second timer, cuckoo'd by node2.
-                                tick: 30
+                                description: A simple 10-second timer, cuckoo'd by node2.
+                                tick: 10
                 transports:
                         tcp:
                                 address: localhost
@@ -14,6 +14,7 @@ system:
         node2:
                 privateKey: testnets/localnet/keys/node2
                 publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
+                roleStorage: testnets/localnet/storage
                 roles:
                         cuckoo:
                                 timer: timer1

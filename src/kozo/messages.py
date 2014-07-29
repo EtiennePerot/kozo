@@ -1,7 +1,8 @@
+import os
 import struct
 import time
 import itertools
-from kozo import kozoSystem, Node
+from kozo import KozoError, kozoSystem, Node
 from .log import *
 
 _serializers = []
@@ -136,6 +137,65 @@ class Heartbeat(_Message):
 		self._toNode = toNode
 	def getRecipientNodes(self):
 		return [self._toNode]
+
+class RoleStorage(_Message):
+	@classmethod
+	def load(cls, role):
+		target = cls._getTargetFile(role)
+		if not os.path.exists(target):
+			return cls(role, None)
+		if not os.path.isfile(target):
+			raise KozoError(target, 'exists but is not a file')
+		try:
+			handle = open(target, 'rb')
+			bytes = handle.read(-1)
+			handle.close()
+		except:
+			try:
+				os.remove(target)
+			except:
+				pass
+			raise
+		message = decodeMessage(bytes)
+		if not isinstance(message, cls):
+			raise KozoError(target, 'is not a RoleStorage message')
+		if message.getRole() != role:
+			raise KozoError(target, 'is a RoleStorage message intended for role', message.getRole().getName(), ', not', role.getName())
+		return message
+	@classmethod
+	def _getTargetFile(cls, role):
+		node = role.getNode()
+		nodeStorage = node.getRoleStorage()
+		if nodeStorage is None:
+			raise KozoError('Node', node.getName(), 'has no role storage directory defined')
+		return os.path.join(nodeStorage, node.getName() + '.' + role.getName() + '.kozo')
+	def __init__(self, role, data={}):
+		_Message.__init__(self, 'storage', {
+			'role': role.getName(),
+			'data': data,
+		})
+	def getRecipientNodes(self):
+		return []
+	def getRole(self):
+		return self.getSender().getRoleByName(self.getData()['role'])
+	def getRoleStorage(self):
+		return self.getData()['data']
+	def save(self):
+		storage = self.toBytes()
+		target = self._getTargetFile(self.getRole())
+		parent = os.path.dirname(target)
+		if not os.path.exists(parent):
+			os.makedirs(parent)
+		try:
+			handle = open(target, 'wb')
+			handle.write(storage)
+			handle.close()
+		except:
+			try:
+				os.remove(target)
+			except:
+				pass
+			raise
 
 class RoleMessage(_Message):
 	def __init__(self, fromRole, type, channel=None, data={}):

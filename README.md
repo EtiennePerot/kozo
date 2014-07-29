@@ -13,7 +13,7 @@ A Kōzō system is made of many *Nodes*, each of which have many *Roles* which c
 
 ##### Glossary
 * **Node**: A physical machine on the network. Has a bunch of *Roles* and a bunch of *Transports*.
-* **Role**: A task that can be performed by a *Node*. It may send *Messages*, may define which *Messages* it is interested in, and receive such *Messages* from other *Roles*.
+* **Role**: The main building block of Kōzō. A role is a task that can be performed by a *Node*. It may send *Messages*, define which *Messages* it is interested in, and process such *Messages* from other *Roles*. It can also read and write objects to persistent storage.
 * **Transport**: A way for *Nodes* to communicate, and over which *Messages* from *Roles* traverse.
 * **Message**: Arbitrary data sent by a *Role*, which other *Roles* may or may not declare to be interested in and receive.
 
@@ -79,6 +79,7 @@ system:
 	scribe:
 		privateKey: /var/lib/kozo/mykey
 		publicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPqI1iSlFvhrB9ZIvCbuVBGnd0vzUgO+HnqzB8gwb2gOjmUXN13TGjGsyEXvYZvIPHUYHp/A9Ob/afkeA7UiDOrxNMmYco9Aczu63IuEbqS7CWUQVAq84mEhi9j2bQJp7wr1FSAz8Lg1A2jEBYDJo06gvsUJc8UW4ONjgCc4fszCrqvfoZ8reESe2+UaZN+yE+cjpN1Mn1DXwkINRqyXYv6cZHJwAeY04QrwYZWRaQe2BxNzcTo9Kb+emJQupDRx3YKoJuGr+mO6sHDvKY0pAB3ERLKfKKk37X0GK3INBWha4h8RFuTebchP/QVOESC5uTklXtpMGxLxFeYYM0r8T/
+		roleStorage: /var/lib/kozo/storage
 		roles:
 			cuckoo:
 				timer: timer1
@@ -98,6 +99,7 @@ Here is a detailed description of what each block does and accepts as options:
     * Each child of the `system` block is a Node block. Its name determines the Node's name. Each Node block contains Node-specific information.
         * `privateKey` is a (preferrably absolute) path to the private key of the Node. Note that this file should only be valid on the Node in question, i.e. only the Node being described should have such a file. As such, it is entirely possible to have the same `privateKey` value for all Node blocks, as long as each Node has its own private key saved at that location on its filesystem.
         * `publicKey` is the contents of the public half of `privateKey`. Since all Nodes need to know this information, it is provided directly into the configuration file, as opposed to being pointed at by a path.
+        * `roleStorage` is a (preferrably absolute) path to a directory where roles in this node will be able to write for persistent storage. Required if any of the roles in this node require persistent storage.
         * `selfToOthersConnectPolicy`: Connection policy for connections going from this node to other nodes. See the Connection policies section for more info.
         * `othersToSelfConnectPolicy`: Connection policy for connections going from other nodes to this node. See the Connection policies section for more info.
         * `overrideMainConfiguration`: May contain any root-level configuration option (defined below) other than `system`. This will override the value of these options only on this node. Only use if you know what you are doing; for example, changing things like `heartbeat`, `connectionRetry`, `cipher`, `hmac`, etc. is generally a bad idea.
@@ -128,7 +130,7 @@ The following Roles are distributed as part of Kōzō:
 * `timer`: A simple Role that emits a timer message (events of type `tick`) at a regular interval.
     * `tick` (Optional): Number of seconds between each message. Default: 1 seccond
     * `message` (Optional): A string to insert into every message
-* `cuckoo`: A simple Role that listens for `tick` events (messages sent by the `timer` Role) and prints them.
+* `cuckoo`: A simple Role that listens for `tick` events (messages sent by the `timer` Role) and prints them. Uses persistent storage to remember the last cuckoo it got.
     * `timer` (Optional): The name of the `timer` Role to listen to. Other `timer` Roles will be ignored. If unspecified, will listen to all `timer` Roles in the system.
 * `message_injector`: A Role useful for debugging. Listens to a TCP port. Any text sent to this port will be interpreted by Python (using `eval`, so don't expose this) and sent inside the network.
     * `bindAddress` (Optional): The address to bind to. Default: `localhost`.

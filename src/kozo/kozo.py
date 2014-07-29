@@ -20,6 +20,7 @@ class Role(Configurable):
 		self._name = name
 		self._node = None
 		self._controllingThread = None
+		self._storage = (False, None) # (Initialized bool, RoleMessage instance)
 	def getName(self):
 		return self._name
 	def getNode(self):
@@ -81,6 +82,16 @@ class Role(Configurable):
 		pass
 	def localInit(self):
 		pass
+	def getStorage(self):
+		from .messages import RoleStorage
+		if not self._storage[0]:
+			self._storage = (True, RoleStorage.load(self))
+		return self._storage[1].getRoleStorage()
+	def setStorage(self, storage):
+		from .messages import RoleStorage
+		roleStorage = RoleStorage(self, storage)
+		roleStorage.save()
+		self._storage = (True, roleStorage)
 	def run(self):
 		raise NotImplementedError()
 	def kill(self):
@@ -173,6 +184,7 @@ class Node(Configurable):
 		Configurable.__init__(self, 'Node<' + name + '>', providedConfig, {
 			'selfToOthersConnectPolicy': self.CONNECTPOLICY_CONSTANT,
 			'othersToSelfConnectPolicy': self.CONNECTPOLICY_CONSTANT,
+			'roleStorage': None,
 			'overrideMainConfiguration': {},
 		}, ['publicKey', 'privateKey', 'roles', 'transports'])
 		self._name = name
@@ -184,6 +196,7 @@ class Node(Configurable):
 		if self._publicKey[0] != 'ssh-rsa':
 			raise KozoError('Only RSA keys are supported; node', self.getName(), 'has a non-RSA or invalid key.')
 		self._privateKeyPath = self['privateKey']
+		self._roleStorage = self['roleStorage']
 		self._selfToOthersConnectPolicy = self['selfToOthersConnectPolicy']
 		if self._selfToOthersConnectPolicy not in self.CONNECTPOLICIES:
 			raise KozoError('Invalid selfToOthersConnectPolicy on node', self.getName())
@@ -205,6 +218,8 @@ class Node(Configurable):
 			if role.getName() == name:
 				return role
 		return None
+	def getRoleStorage(self):
+		return self._roleStorage
 	def getPublicKey(self):
 		return self._publicKey
 	def getPrivateKeyPath(self):
